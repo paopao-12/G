@@ -4,14 +4,14 @@ import * as ExpoLocation from 'expo-location';
 import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 
-// Update this to your actual backend server URL
+
 const API_URL = Platform.select({
-    android: 'http://192.168.1.11:4000/api/transport', // For Android Emulator
+    android: 'http://192.168.254.112:4000/api/transport', // For Android Emulator
     ios: 'http://localhost:4000/api/transport', // For iOS Simulator
     default: 'http://localhost:4000/api/transport',
 });
 
-// Storage keys
+
 const STORAGE_KEYS = {
     ROUTES: '@davao_commuter_routes',
     STOPS: '@davao_commuter_stops',
@@ -19,10 +19,10 @@ const STORAGE_KEYS = {
     OFFLINE_MODE: '@davao_commuter_offline_mode',
 };
 
-// Cache expiration time (24 hours in milliseconds)
+
 const CACHE_EXPIRATION = 24 * 60 * 60 * 1000;
 
-// Mock data for offline mode
+
 const MOCK_DATA = {
     routes: [
         {
@@ -52,27 +52,25 @@ const MOCK_DATA = {
     ]
 };
 
-// Create axios instance with default config
 const axiosInstance = axios.create({
     baseURL: API_URL,
-    timeout: 10000, // 10 seconds timeout
+    timeout: 10000, 
     headers: {
         'Content-Type': 'application/json',
     },
 });
 
-// Add request interceptor for logging and offline mode
+
 axiosInstance.interceptors.request.use(
     async (config) => {
         console.log(`Making request to: ${config.baseURL}${config.url}`);
-        
-        // Check if we're in offline mode
+      
         const offlineMode = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_MODE);
         if (offlineMode === 'true') {
             throw new Error('OFFLINE_MODE');
         }
 
-        // Check network connectivity before making request
+       
         const netInfo = await NetInfo.fetch();
         if (!netInfo.isConnected) {
             console.log('No network connection, enabling offline mode');
@@ -88,7 +86,7 @@ axiosInstance.interceptors.request.use(
     }
 );
 
-// Add response interceptor for logging and error handling
+
 axiosInstance.interceptors.response.use(
     (response) => {
         console.log(`Response from ${response.config.url}:`, response.status);
@@ -106,15 +104,15 @@ axiosInstance.interceptors.response.use(
                 code: error.code,
             });
 
-            // Check network connectivity
+        
             const netInfo = await NetInfo.fetch();
             if (!netInfo.isConnected) {
-                // Enable offline mode
+                
                 await AsyncStorage.setItem(STORAGE_KEYS.OFFLINE_MODE, 'true');
                 throw new Error('OFFLINE_MODE');
             }
 
-            // Handle specific error cases
+         
             if (error.code === 'ECONNABORTED') {
                 throw new Error('Request timed out. Please check your internet connection.');
             }
@@ -132,14 +130,12 @@ axiosInstance.interceptors.response.use(
     }
 );
 
-// Retry configuration
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // 1 second
+const RETRY_DELAY = 1000; 
 
-// Helper function to delay execution
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Helper function to handle retries
+
 const retryRequest = async <T>(
   requestFn: () => Promise<T>,
   retries = MAX_RETRIES
@@ -152,7 +148,7 @@ const retryRequest = async <T>(
       throw error;
     }
 
-    // Only retry on network errors or 5xx server errors
+    
     if (
       axios.isAxiosError(error) &&
       (!error.response || error.response.status >= 500)
@@ -201,7 +197,7 @@ export interface UserLocation {
 
 export interface NearestStop {
     stop: Stop;
-    distance: number; // in meters
+    distance: number;
 }
 
 export interface RouteSuggestion {
@@ -210,7 +206,7 @@ export interface RouteSuggestion {
     destinationStop: RouteStop;
     estimatedFare: number;
     distance: number;
-    duration: number; // in minutes
+    duration: number; 
 }
 
 export interface JeepneyLocation {
@@ -244,14 +240,14 @@ export interface RouteFilter {
 }
 
 export interface TrafficData {
-    [key: string]: number; // key format: "stopId1-stopId2", value: congestion level (0-1)
+    [key: string]: number; 
 }
 
 const handleError = (error: unknown, context: string): never => {
   console.error(`Error ${context}:`, error);
   
   if (axios.isAxiosError(error)) {
-    // Log detailed error information
+  
     console.error('Axios error details:', {
       message: error.message,
       code: error.code,
@@ -284,7 +280,7 @@ const handleError = (error: unknown, context: string): never => {
   throw error;
 };
 
-// Helper function to check if cache is valid
+
 const isCacheValid = async (): Promise<boolean> => {
   try {
     const lastSync = await AsyncStorage.getItem(STORAGE_KEYS.LAST_SYNC);
@@ -298,7 +294,7 @@ const isCacheValid = async (): Promise<boolean> => {
   }
 };
 
-// Helper function to update last sync time
+
 const updateLastSync = async () => {
   try {
     await AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, Date.now().toString());
@@ -307,7 +303,7 @@ const updateLastSync = async () => {
   }
 };
 
-// Helper function to get cached data
+
 const getCachedData = async <T>(key: string): Promise<T | null> => {
   try {
     const data = await AsyncStorage.getItem(key);
@@ -318,7 +314,7 @@ const getCachedData = async <T>(key: string): Promise<T | null> => {
   }
 };
 
-// Helper function to cache data
+
 const cacheData = async <T>(key: string, data: T): Promise<void> => {
   try {
     await AsyncStorage.setItem(key, JSON.stringify(data));
@@ -327,9 +323,9 @@ const cacheData = async <T>(key: string, data: T): Promise<void> => {
   }
 };
 
-// Helper function to calculate distance between two points using Haversine formula
+
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371e3; // Earth's radius in meters
+    const R = 6371e3; 
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -340,14 +336,23 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
         Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    return R * c; // Distance in meters
+    return R * c; 
+};
+
+const testBackendConnection = async (): Promise<boolean> => {
+  try {
+    const response = await axiosInstance.get('/health'); 
+    return response.status === 200;
+  } catch {
+    return false;
+  }
 };
 
 const api = {
-    // Get all routes with their stops
+ 
     getRoutes: async (): Promise<Route[]> => {
         try {
-            // Try to get cached data first
+            
             const cachedRoutes = await getCachedData<Route[]>(STORAGE_KEYS.ROUTES);
             const cacheValid = await isCacheValid();
 
@@ -356,26 +361,25 @@ const api = {
                 return cachedRoutes;
             }
 
-            // If no cache or cache expired, fetch from API
+            
             try {
                 const routes = await retryRequest(() => 
                     axiosInstance.get('/routes').then(res => res.data)
                 );
                 
-                // Cache the new data
+             
                 await cacheData(STORAGE_KEYS.ROUTES, routes);
                 await updateLastSync();
                 
                 return routes;
             } catch (error) {
-                // If network request fails, try to use cached data
+                
                 const cachedRoutes = await getCachedData<Route[]>(STORAGE_KEYS.ROUTES);
                 if (cachedRoutes) {
                     console.log('Network error, using cached routes data');
                     return cachedRoutes;
                 }
                 
-                // If no cached data, use mock data
                 console.log('No cached data, using mock routes data');
                 return MOCK_DATA.routes;
             }
@@ -385,10 +389,9 @@ const api = {
         }
     },
 
-    // Get all stops
+
     getStops: async (): Promise<Stop[]> => {
         try {
-            // Try to get cached data first
             const cachedStops = await getCachedData<Stop[]>(STORAGE_KEYS.STOPS);
             const cacheValid = await isCacheValid();
 
@@ -397,26 +400,26 @@ const api = {
                 return cachedStops;
             }
 
-            // If no cache or cache expired, fetch from API
+         
             try {
                 const stops = await retryRequest(() => 
                     axiosInstance.get('/stops').then(res => res.data)
                 );
                 
-                // Cache the new data
+               
                 await cacheData(STORAGE_KEYS.STOPS, stops);
                 await updateLastSync();
                 
                 return stops;
             } catch (error) {
-                // If network request fails, try to use cached data
+             
                 const cachedStops = await getCachedData<Stop[]>(STORAGE_KEYS.STOPS);
                 if (cachedStops) {
                     console.log('Network error, using cached stops data');
                     return cachedStops;
                 }
                 
-                // If no cached data, use mock data
+            
                 console.log('No cached data, using mock stops data');
                 return MOCK_DATA.stops;
             }
@@ -426,7 +429,6 @@ const api = {
         }
     },
 
-    // Get fare between two stops
     getFare: async (originId: number, destinationId: number): Promise<FareInfo> => {
         try {
             return await retryRequest(() => 
@@ -438,14 +440,21 @@ const api = {
                 }).then(res => res.data)
             );
         } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.status === 404) {
+                return {
+                    distance_km: 0,
+                    fare: 0,
+                    route_name: 'No direct route',
+                };
+            }
             return handleError(error, 'calculate fare');
         }
     },
 
-    // Get detailed route information
+    
     getRouteDetails: async (routeId: number): Promise<Route> => {
         try {
-            // Try to get cached routes first
+            
             const cachedRoutes = await getCachedData<Route[]>(STORAGE_KEYS.ROUTES);
             const cacheValid = await isCacheValid();
 
@@ -457,12 +466,12 @@ const api = {
                 }
             }
 
-            // If no cache or route not found in cache, fetch from API
+          
             const route = await retryRequest(() => 
                 axiosInstance.get(`/routes/${routeId}`).then(res => res.data)
             );
             
-            // Update the cache with the new route data
+            
             if (cachedRoutes) {
                 const updatedRoutes = cachedRoutes.map(r => 
                     r.id === routeId ? route : r
@@ -473,7 +482,7 @@ const api = {
             
             return route;
         } catch (error) {
-            // If network request fails, try to use cached data
+            
             const cachedRoutes = await getCachedData<Route[]>(STORAGE_KEYS.ROUTES);
             if (cachedRoutes) {
                 const cachedRoute = cachedRoutes.find(r => r.id === routeId);
@@ -486,7 +495,7 @@ const api = {
         }
     },
 
-    // Clear all cached data
+    
     clearCache: async (): Promise<void> => {
         try {
             await AsyncStorage.multiRemove([
@@ -501,7 +510,7 @@ const api = {
         }
     },
 
-    // Get user's current location
+    
     getCurrentLocation: async (): Promise<UserLocation> => {
         try {
             const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
@@ -523,7 +532,7 @@ const api = {
         }
     },
 
-    // Find nearest stops to a location
+    
     findNearestStops: async (location: UserLocation, maxDistance: number = 1000): Promise<NearestStop[]> => {
         try {
             const stops = await api.getStops();
@@ -552,14 +561,14 @@ const api = {
         }
     },
 
-    // Get route suggestions between two locations
+   
     getRouteSuggestions: async (
         originLocation: UserLocation,
         destinationLocation: UserLocation,
         filters?: RouteFilter
     ): Promise<RouteSuggestion[]> => {
         try {
-            // Find nearest stops to origin and destination
+
             const originStops = await api.findNearestStops(originLocation, filters?.maxDistance);
             const destinationStops = await api.findNearestStops(destinationLocation, filters?.maxDistance);
 
@@ -567,16 +576,16 @@ const api = {
                 throw new Error('No stops found near the selected locations');
             }
 
-            // Get all routes
+         
             const routes = await api.getRoutes();
             const suggestions: RouteSuggestion[] = [];
 
-            // Find routes that connect origin and destination
+          
             for (const route of routes) {
-                // Skip routes in avoidRoutes
+              
                 if (filters?.avoidRoutes?.includes(route.id)) continue;
 
-                // Skip if not in preferredRoutes (if specified)
+               
                 if (filters?.preferredRoutes && !filters.preferredRoutes.includes(route.id)) continue;
 
                 const originStopIndex = route.stops.findIndex(
@@ -587,26 +596,25 @@ const api = {
                 );
 
                 if (originStopIndex !== -1 && destinationStopIndex !== -1 && originStopIndex < destinationStopIndex) {
-                    // Calculate total distance
+                 
                     let totalDistance = 0;
                     for (let i = originStopIndex; i < destinationStopIndex; i++) {
                         totalDistance += route.stops[i].distance_to_next || 0;
                     }
 
-                    // Get fare information
+                
                     const fareInfo = await api.getFare(
                         originStops[0].stop.id,
                         destinationStops[0].stop.id
                     );
 
-                    // Estimate duration (assuming average speed of 20 km/h)
                     const duration = (totalDistance / 20) * 60; // in minutes
 
-                    // Apply filters
+             
                     if (filters?.maxFare && fareInfo.fare > filters.maxFare) continue;
                     if (filters?.maxDuration && duration > filters.maxDuration) continue;
 
-                    // Adjust duration based on time of day
+                 
                     let adjustedDuration = duration;
                     if (filters?.timeOfDay) {
                         const hour = new Date().getHours();
@@ -632,7 +640,7 @@ const api = {
         }
     },
 
-    // Get map region that includes all stops in a route
+  
     getRouteMapRegion: (route: Route): MapRegion => {
         const latitudes = route.stops.map(stop => stop.latitude);
         const longitudes = route.stops.map(stop => stop.longitude);
@@ -642,7 +650,7 @@ const api = {
         const minLng = Math.min(...longitudes);
         const maxLng = Math.max(...longitudes);
 
-        const latitudeDelta = (maxLat - minLat) * 1.5; // Add 50% padding
+        const latitudeDelta = (maxLat - minLat) * 1.5; 
         const longitudeDelta = (maxLng - minLng) * 1.5;
 
         return {
@@ -653,7 +661,7 @@ const api = {
         };
     },
 
-    // Get estimated arrival time for a jeepney at a stop
+    
     getEstimatedArrival: async (
         jeepneyId: string,
         stopId: number
@@ -667,7 +675,6 @@ const api = {
         }
     },
 
-    // Get real-time jeepney locations for a route
     getJeepneyLocations: async (routeId: number): Promise<JeepneyLocation[]> => {
         try {
             const response = await axiosInstance.get(`/jeepneys/${routeId}/locations`);
@@ -682,7 +689,7 @@ const api = {
         }
     },
 
-    // Subscribe to real-time jeepney updates
+  
     subscribeToJeepneyUpdates: (
         routeId: number,
         onUpdate: (locations: JeepneyLocation[]) => void,
@@ -712,7 +719,7 @@ const api = {
         };
     },
 
-    // Get traffic data for a route
+    
     getTrafficData: async (routeId: number): Promise<TrafficData> => {
         try {
             const response = await axiosInstance.get(`/routes/${routeId}/traffic`);
@@ -723,7 +730,7 @@ const api = {
         }
     },
 
-    // Enable/disable offline mode
+    
     setOfflineMode: async (enabled: boolean): Promise<void> => {
         try {
             await AsyncStorage.setItem(STORAGE_KEYS.OFFLINE_MODE, enabled.toString());
@@ -733,7 +740,7 @@ const api = {
         }
     },
 
-    // Check if we're in offline mode
+   
     isOfflineMode: async (): Promise<boolean> => {
         try {
             const offlineMode = await AsyncStorage.getItem(STORAGE_KEYS.OFFLINE_MODE);
@@ -745,4 +752,4 @@ const api = {
     },
 };
 
-export default api; 
+export default api;
