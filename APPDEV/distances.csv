@@ -1,0 +1,657 @@
+route_name,origin,destination,distance_km
+Bangkal,Peace Avenue,DLC Bldg. (McArthur Hi-way, Balscogan),1.0
+Bangkal,Peace Avenue,San Antonio VII (front GSIS),2.0
+Bangkal,Peace Avenue,Davao Exec. Homes (Quimpo Blvd.),3.0
+Bangkal,Peace Avenue,SM City Davao,4.0
+Bangkal,Peace Avenue,Philhealth Office,5.0
+Bangkal,Peace Avenue,Agro School Foundation,6.0
+Bangkal,Peace Avenue,Almendras Gym,7.0
+Bangkal,Peace Avenue,BPI (Claveria),8.0
+Bangkal,Peace Avenue,Guerrero cor. Magsaysay Ave.,9.0
+Bangkal,Peace Avenue,F. Bangoy cor. Magsaysay Ave.,10.0
+Bangkal,Peace Avenue,Magsaysay Ave. (Park),10.3
+Bangkal,DLC Bldg. (McArthur Hi-way, Balscogan),San Antonio VII (front GSIS),1.0
+Bangkal,DLC Bldg. (McArthur Hi-way, Balscogan),Davao Exec. Homes (Quimpo Blvd.),2.0
+Bangkal,DLC Bldg. (McArthur Hi-way, Balscogan),SM City Davao,3.0
+Bangkal,DLC Bldg. (McArthur Hi-way, Balscogan),Philhealth Office,4.0
+Bangkal,DLC Bldg. (McArthur Hi-way, Balscogan),Agro School Foundation,5.0
+Bangkal,DLC Bldg. (McArthur Hi-way, Balscogan),Almendras Gym,6.0
+Bangkal,DLC Bldg. (McArthur Hi-way, Balscogan),BPI (Claveria),7.0
+Bangkal,DLC Bldg. (McArthur Hi-way, Balscogan),Guerrero cor. Magsaysay Ave.,8.0
+Bangkal,DLC Bldg. (McArthur Hi-way, Balscogan),F. Bangoy cor. Magsaysay Ave.,9.0
+Bangkal,DLC Bldg. (McArthur Hi-way, Balscogan),Magsaysay Ave. (Park),9.3
+Bago Aplaya,Bago Aplaya,DXSS (Bangkal),1.0
+Bago Aplaya,Bago Aplaya,Tahimik Avenue,2.0
+Bago Aplaya,Bago Aplaya,Matina Crossing,3.0
+Bago Aplaya,Bago Aplaya,ABS-CBN Junction,4.0
+Bago Aplaya,Bago Aplaya,SM City Davao,5.0
+Bago Aplaya,Bago Aplaya,Ecoland Terminal Crossing,6.0
+Bago Aplaya,Bago Aplaya,Almendras Gym,7.0
+Bago Aplaya,Bago Aplaya,Roxas Avenue,10.0
+Bago Aplaya,DXSS (Bangkal),Tahimik Avenue,1.0
+Bago Aplaya,DXSS (Bangkal),Matina Crossing,2.0
+Bago Aplaya,DXSS (Bangkal),ABS-CBN Junction,3.0
+Bago Aplaya,DXSS (Bangkal),SM City Davao,4.0
+Bago Aplaya,DXSS (Bangkal),Ecoland Terminal Crossing,5.0
+Bago Aplaya,DXSS (Bangkal),Almendras Gym,6.0
+Bago Aplaya,DXSS (Bangkal),Roxas Avenue,9.0
+Acacia-Indangan-Mahayag,Abapo Residence,Movie Homes,1.0
+Acacia-Indangan-Mahayag,Abapo Residence,Jardin Residence,2.0
+Acacia-Indangan-Mahayag,Abapo Residence,San Andres Chapel,3.0
+Acacia-Indangan-Mahayag,Abapo Residence,Magno Farm,4.0
+Acacia-Indangan-Mahayag,Abapo Residence,Dacudao Village,5.0
+Acacia-Indangan-Mahayag,Abapo Residence,Pola Residence,6.0
+Acacia-Indangan-Mahayag,Abapo Residence,El Dorado Farm,7.0
+Acacia-Indangan-Mahayag,Abapo Residence,Country Homes,8.0
+Acacia-Indangan-Mahayag,Abapo Residence,Kingdom Hall (Jehovah),9.0
+Acacia-Indangan-Mahayag,Abapo Residence,Buhangin Memorial Park,10.0
+Acacia-Indangan-Mahayag,Abapo Residence,Milan,11.0
+Acacia-Indangan-Mahayag,Abapo Residence,Watusi St.,12.0
+Acacia-Indangan-Mahayag,Abapo Residence,DLPC Bajada,13.0
+Acacia-Indangan-Mahayag,Abapo Residence,Victoria Plaza,14.0
+Acacia-Indangan-Mahayag,Abapo Residence,Gaisano Mall,15.0
+Acacia-Indangan-Mahayag,Abapo Residence,Regina Complex,16.0
+Acacia-Indangan-Mahayag,Abapo Residence,Corner San Pedro & Iñigo (Anda) Sts.,17.0
+Acacia-Indangan-Mahayag,Abapo Residence,Bankerohan,18.0
+Catigan,Catigan Brgy. Hall,EVN Farm,1.0
+Catigan,Catigan Brgy. Hall,San Antonio VII (front GSIS),2.0
+Catigan,Catigan Brgy. Hall,Davao Exec. Homes (Quimpo Blvd.),3.0
+Catigan,Catigan Brgy. Hall,SM City Davao,4.0
+Catigan,Catigan Brgy. Hall,Philhealth Office,5.0
+Catigan,Catigan Brgy. Hall,Agro School Foundation,6.0
+Catigan,Catigan Brgy. Hall,Almendras Gym,7.0
+Catigan,Catigan Brgy. Hall,BPI (Claveria),8.0
+Catigan,Catigan Brgy. Hall,Guerrero cor. Magsaysay Ave.,9.0
+Catigan,Catigan Brgy. Hall,F. Bangoy cor. Magsaysay Ave.,10.0
+Catigan,Catigan Brgy. Hall,Magsaysay Ave. (Park),10.3
+Catigan,EVN Farm,San Antonio VII (front GSIS),1.0
+Catigan,EVN Farm,Davao Exec. Homes (Quimpo Blvd.),2.0
+Catigan,EVN Farm,SM City Davao,3.0
+Catigan,EVN Farm,Philhealth Office,4.0
+Catigan,EVN Farm,Agro School Foundation,5.0
+Catigan,EVN Farm,Almendras Gym,6.0
+Catigan,EVN Farm,BPI (Claveria),7.0
+Catigan,EVN Farm,Guerrero cor. Magsaysay Ave.,8.0
+Catigan,EVN Farm,F. Bangoy cor. Magsaysay Ave.,9.0
+Catigan,EVN Farm,Magsaysay Ave. (Park),9.3
+Catitipan via Dacudao,U-One Trading (Buhangin),NHA Crossing (San Antonio Buhangin),1.0
+Catitipan via Dacudao,U-One Trading (Buhangin),San Antonio VII (front GSIS),2.0
+Catitipan via Dacudao,U-One Trading (Buhangin),Davao Exec. Homes (Quimpo Blvd.),3.0
+Catitipan via Dacudao,U-One Trading (Buhangin),SM City Davao,4.0
+Catitipan via Dacudao,U-One Trading (Buhangin),Philhealth Office,5.0
+Catitipan via Dacudao,U-One Trading (Buhangin),Agro School Foundation,6.0
+Catitipan via Dacudao,U-One Trading (Buhangin),Almendras Gym,7.0
+Catitipan via Dacudao,U-One Trading (Buhangin),BPI (Claveria),8.0
+Catitipan via Dacudao,U-One Trading (Buhangin),Guerrero cor. Magsaysay Ave.,9.0
+Catitipan via Dacudao,U-One Trading (Buhangin),F. Bangoy cor. Magsaysay Ave.,10.0
+Catitipan via Dacudao,U-One Trading (Buhangin),Magsaysay Ave. (Park),10.3
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),San Antonio VII (front GSIS),1.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),Davao Exec. Homes (Quimpo Blvd.),2.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),SM City Davao,3.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),Philhealth Office,4.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),Agro School Foundation,5.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),Almendras Gym,6.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),BPI (Claveria),7.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),Guerrero cor. Magsaysay Ave.,8.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),F. Bangoy cor. Magsaysay Ave.,9.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),Magsaysay Ave. (Park),9.3
+Catitipan via JP Laurel Avenue,U-One Trading (Buhangin),NHA Crossing (San Antonio Buhangin),1.0
+Catitipan via JP Laurel Avenue,U-One Trading (Buhangin),San Antonio VII (front GSIS),2.0
+Catitipan via JP Laurel Avenue,U-One Trading (Buhangin),Davao Exec. Homes (Quimpo Blvd.),3.0
+Catitipan via JP Laurel Avenue,U-One Trading (Buhangin),SM City Davao,4.0
+Catitipan via JP Laurel Avenue,U-One Trading (Buhangin),Philhealth Office,5.0
+Catitipan via JP Laurel Avenue,U-One Trading (Buhangin),Agro School Foundation,6.0
+Catitipan via JP Laurel Avenue,U-One Trading (Buhangin),Almendras Gym,7.0
+Catitipan via JP Laurel Avenue,U-One Trading (Buhangin),BPI (Claveria),8.0
+Catitipan via JP Laurel Avenue,U-One Trading (Buhangin),Guerrero cor. Magsaysay Ave.,9.0
+Catitipan via JP Laurel Avenue,U-One Trading (Buhangin),F. Bangoy cor. Magsaysay Ave.,10.0
+Catitipan via JP Laurel Avenue,U-One Trading (Buhangin),Magsaysay Ave. (Park),10.3
+Communal / Country Homes,Communal,Country Homes,1.0
+Communal / Country Homes,Communal,Kingdom Hall (Jehovah),2.0
+Communal / Country Homes,Communal,Buhangin Memorial Park,3.0
+Communal / Country Homes,Communal,Milan,4.0
+Communal / Country Homes,Communal,Watusi St.,5.0
+Communal / Country Homes,Communal,DLPC Bajada,6.0
+Communal / Country Homes,Communal,Victoria Plaza,7.0
+Communal / Country Homes,Communal,Gaisano Mall,8.0
+Communal / Country Homes,Communal,Regina Complex,9.0
+Communal / Country Homes,Communal,Corner San Pedro & Iñigo (Anda) Sts.,10.0
+Communal / Country Homes,Communal,Bankerohan,11.0
+Dacoville,Dacoville,San Antonio VII (front GSIS),1.0
+Dacoville,Dacoville,Davao Exec. Homes (Quimpo Blvd.),2.0
+Dacoville,Dacoville,SM City Davao,3.0
+Dacoville,Dacoville,Philhealth Office,4.0
+Dacoville,Dacoville,Agro School Foundation,5.0
+Dacoville,Dacoville,Almendras Gym,6.0
+Dacoville,Dacoville,BPI (Claveria),7.0
+Dacoville,Dacoville,Guerrero cor. Magsaysay Ave.,8.0
+Dacoville,Dacoville,F. Bangoy cor. Magsaysay Ave.,9.0
+Dacoville,Dacoville,Magsaysay Ave. (Park),10.0
+Darong Route,Darong,Baracatan,1.0
+Darong Route,Darong,Toril,2.0
+Darong Route,Darong,Victoria Plaza,3.0
+Darong Route,Darong,Gaisano Mall,4.0
+Darong Route,Darong,Regina Complex,5.0
+Darong Route,Darong,Corner San Pedro & Iñigo (Anda) Sts.,6.0
+Darong Route,Darong,Bankerohan,7.0
+Doña Pilar Subd. via JP Laurel Avenue,Doña Pilar Subd.,U-One Trading (Buhangin),1.0
+Doña Pilar Subd. via JP Laurel Avenue,Doña Pilar Subd.,NHA Crossing (San Antonio Buhangin),2.0
+Doña Pilar Subd. via JP Laurel Avenue,Doña Pilar Subd.,San Antonio VII (front GSIS),3.0
+Doña Pilar Subd. via JP Laurel Avenue,Doña Pilar Subd.,Davao Exec. Homes (Quimpo Blvd.),4.0
+Doña Pilar Subd. via JP Laurel Avenue,Doña Pilar Subd.,SM City Davao,5.0
+Doña Pilar Subd. via JP Laurel Avenue,Doña Pilar Subd.,Philhealth Office,6.0
+Doña Pilar Subd. via JP Laurel Avenue,Doña Pilar Subd.,Agro School Foundation,7.0
+Doña Pilar Subd. via JP Laurel Avenue,Doña Pilar Subd.,Almendras Gym,8.0
+Doña Pilar Subd. via JP Laurel Avenue,Doña Pilar Subd.,BPI (Claveria),9.0
+Doña Pilar Subd. via JP Laurel Avenue,Doña Pilar Subd.,Guerrero cor. Magsaysay Ave.,10.0
+Doña Pilar Subd. via JP Laurel Avenue,Doña Pilar Subd.,F. Bangoy cor. Magsaysay Ave.,11.0
+Doña Pilar Subd. via JP Laurel Avenue,Doña Pilar Subd.,Magsaysay Ave. (Park),12.0
+Bunawan via Sasa,Bunawan,Sasa,1.0
+Bunawan via Sasa,Bunawan,Victoria Plaza,2.0
+Bunawan via Sasa,Bunawan,Gaisano Mall,3.0
+Bunawan via Sasa,Bunawan,Regina Complex,4.0
+Bunawan via Sasa,Bunawan,Corner San Pedro & Iñigo (Anda) Sts.,5.0
+Bunawan via Sasa,Bunawan,Bankerohan,6.0
+Bunawan via Buhangin,Bunawan,U-One Trading (Buhangin),1.0
+Bunawan via Buhangin,Bunawan,NHA Crossing (San Antonio Buhangin),2.0
+Bunawan via Buhangin,Bunawan,San Antonio VII (front GSIS),3.0
+Bunawan via Buhangin,Bunawan,Davao Exec. Homes (Quimpo Blvd.),4.0
+Bunawan via Buhangin,Bunawan,SM City Davao,5.0
+Bunawan via Buhangin,Bunawan,Philhealth Office,6.0
+Bunawan via Buhangin,Bunawan,Agro School Foundation,7.0
+Bunawan via Buhangin,Bunawan,Almendras Gym,8.0
+Bunawan via Buhangin,Bunawan,BPI (Claveria),9.0
+Bunawan via Buhangin,Bunawan,Guerrero cor. Magsaysay Ave.,10.0
+Bunawan via Buhangin,Bunawan,F. Bangoy cor. Magsaysay Ave.,11.0
+Bunawan via Buhangin,Bunawan,Magsaysay Ave. (Park),12.0
+Cabantian / Emily / Suraya Homes,Cabantian,Emily Homes,1.0
+Cabantian / Emily / Suraya Homes,Cabantian,Suraya Homes,2.0
+Cabantian / Emily / Suraya Homes,Cabantian,Victoria Plaza,3.0
+Cabantian / Emily / Suraya Homes,Cabantian,Gaisano Mall,4.0
+Cabantian / Emily / Suraya Homes,Cabantian,Regina Complex,5.0
+Cabantian / Emily / Suraya Homes,Cabantian,Corner San Pedro & Iñigo (Anda) Sts.,6.0
+Cabantian / Emily / Suraya Homes,Cabantian,Bankerohan,7.0
+Buhangin via JP Laurel Avenue,U-One Trading (Buhangin),NHA Crossing (San Antonio Buhangin),1.0
+Buhangin via JP Laurel Avenue,U-One Trading (Buhangin),San Antonio VII (front GSIS),2.0
+Buhangin via JP Laurel Avenue,U-One Trading (Buhangin),Davao Exec. Homes (Quimpo Blvd.),3.0
+Buhangin via JP Laurel Avenue,U-One Trading (Buhangin),SM City Davao,4.0
+Buhangin via JP Laurel Avenue,U-One Trading (Buhangin),Philhealth Office,5.0
+Buhangin via JP Laurel Avenue,U-One Trading (Buhangin),Agro School Foundation,6.0
+Buhangin via JP Laurel Avenue,U-One Trading (Buhangin),Almendras Gym,7.0
+Buhangin via JP Laurel Avenue,U-One Trading (Buhangin),BPI (Claveria),8.0
+Buhangin via JP Laurel Avenue,U-One Trading (Buhangin),Guerrero cor. Magsaysay Ave.,9.0
+Buhangin via JP Laurel Avenue,U-One Trading (Buhangin),F. Bangoy cor. Magsaysay Ave.,10.0
+Buhangin via JP Laurel Avenue,U-One Trading (Buhangin),Magsaysay Ave. (Park),11.0
+Buhangin via Dacudao,U-One Trading (Buhangin),NHA Crossing (San Antonio Buhangin),1.0
+Buhangin via Dacudao,U-One Trading (Buhangin),San Antonio VII (front GSIS),2.0
+Buhangin via Dacudao,U-One Trading (Buhangin),Davao Exec. Homes (Quimpo Blvd.),3.0
+Buhangin via Dacudao,U-One Trading (Buhangin),SM City Davao,4.0
+Buhangin via Dacudao,U-One Trading (Buhangin),Philhealth Office,5.0
+Buhangin via Dacudao,U-One Trading (Buhangin),Agro School Foundation,6.0
+Buhangin via Dacudao,U-One Trading (Buhangin),Almendras Gym,7.0
+Buhangin via Dacudao,U-One Trading (Buhangin),BPI (Claveria),8.0
+Buhangin via Dacudao,U-One Trading (Buhangin),Guerrero cor. Magsaysay Ave.,9.0
+Buhangin via Dacudao,U-One Trading (Buhangin),F. Bangoy cor. Magsaysay Ave.,10.0
+Buhangin via Dacudao,U-One Trading (Buhangin),Magsaysay Ave. (Park),11.0
+Baracatan / Toril / Darong,Baracatan,Toril,1.0
+Baracatan / Toril / Darong,Baracatan,Darong,2.0
+Baracatan / Toril / Darong,Baracatan,Victoria Plaza,3.0
+Baracatan / Toril / Darong,Baracatan,Gaisano Mall,4.0
+Baracatan / Toril / Darong,Baracatan,Regina Complex,5.0
+Baracatan / Toril / Darong,Baracatan,Corner San Pedro & Iñigo (Anda) Sts.,6.0
+Baracatan / Toril / Darong,Baracatan,Bankerohan,7.0
+Bangkas Heights,Bangkas Heights,Victoria Plaza,1.0
+Bangkas Heights,Bangkas Heights,Gaisano Mall,2.0
+Bangkas Heights,Bangkas Heights,Regina Complex,3.0
+Bangkas Heights,Bangkas Heights,Corner San Pedro & Iñigo (Anda) Sts.,4.0
+Bangkas Heights,Bangkas Heights,Bankerohan,5.0
+Bangkal,San Antonio VII (front GSIS),Davao Exec. Homes (Quimpo Blvd.),1.0
+Bangkal,San Antonio VII (front GSIS),SM City Davao,2.0
+Bangkal,San Antonio VII (front GSIS),Philhealth Office,3.0
+Bangkal,San Antonio VII (front GSIS),Agro School Foundation,4.0
+Bangkal,San Antonio VII (front GSIS),Almendras Gym,5.0
+Bangkal,San Antonio VII (front GSIS),BPI (Claveria),6.0
+Bangkal,San Antonio VII (front GSIS),Guerrero cor. Magsaysay Ave.,7.0
+Bangkal,San Antonio VII (front GSIS),F. Bangoy cor. Magsaysay Ave.,8.0
+Bangkal,San Antonio VII (front GSIS),Magsaysay Ave. (Park),8.3
+Bangkal,Davao Exec. Homes (Quimpo Blvd.),SM City Davao,1.0
+Bangkal,Davao Exec. Homes (Quimpo Blvd.),Philhealth Office,2.0
+Bangkal,Davao Exec. Homes (Quimpo Blvd.),Agro School Foundation,3.0
+Bangkal,Davao Exec. Homes (Quimpo Blvd.),Almendras Gym,4.0
+Bangkal,Davao Exec. Homes (Quimpo Blvd.),BPI (Claveria),5.0
+Bangkal,Davao Exec. Homes (Quimpo Blvd.),Guerrero cor. Magsaysay Ave.,6.0
+Bangkal,Davao Exec. Homes (Quimpo Blvd.),F. Bangoy cor. Magsaysay Ave.,7.0
+Bangkal,Davao Exec. Homes (Quimpo Blvd.),Magsaysay Ave. (Park),7.3
+Bangkal,SM City Davao,Philhealth Office,1.0
+Bangkal,SM City Davao,Agro School Foundation,2.0
+Bangkal,SM City Davao,Almendras Gym,3.0
+Bangkal,SM City Davao,BPI (Claveria),4.0
+Bangkal,SM City Davao,Guerrero cor. Magsaysay Ave.,5.0
+Bangkal,SM City Davao,F. Bangoy cor. Magsaysay Ave.,6.0
+Bangkal,SM City Davao,Magsaysay Ave. (Park),6.3
+Bangkal,Philhealth Office,Agro School Foundation,1.0
+Bangkal,Philhealth Office,Almendras Gym,2.0
+Bangkal,Philhealth Office,BPI (Claveria),3.0
+Bangkal,Philhealth Office,Guerrero cor. Magsaysay Ave.,4.0
+Bangkal,Philhealth Office,F. Bangoy cor. Magsaysay Ave.,5.0
+Bangkal,Philhealth Office,Magsaysay Ave. (Park),5.3
+Bangkal,Agro School Foundation,Almendras Gym,1.0
+Bangkal,Agro School Foundation,BPI (Claveria),2.0
+Bangkal,Agro School Foundation,Guerrero cor. Magsaysay Ave.,3.0
+Bangkal,Agro School Foundation,F. Bangoy cor. Magsaysay Ave.,4.0
+Bangkal,Agro School Foundation,Magsaysay Ave. (Park),4.3
+Bangkal,Almendras Gym,BPI (Claveria),1.0
+Bangkal,Almendras Gym,Guerrero cor. Magsaysay Ave.,2.0
+Bangkal,Almendras Gym,F. Bangoy cor. Magsaysay Ave.,3.0
+Bangkal,Almendras Gym,Magsaysay Ave. (Park),3.3
+Bangkal,BPI (Claveria),Guerrero cor. Magsaysay Ave.,1.0
+Bangkal,BPI (Claveria),F. Bangoy cor. Magsaysay Ave.,2.0
+Bangkal,BPI (Claveria),Magsaysay Ave. (Park),2.3
+Bangkal,Guerrero cor. Magsaysay Ave.,F. Bangoy cor. Magsaysay Ave.,1.0
+Bangkal,Guerrero cor. Magsaysay Ave.,Magsaysay Ave. (Park),1.3
+Bangkal,F. Bangoy cor. Magsaysay Ave.,Magsaysay Ave. (Park),0.3
+Bago Aplaya,Tahimik Avenue,Matina Crossing,1.0
+Bago Aplaya,Tahimik Avenue,ABS-CBN Junction,2.0
+Bago Aplaya,Tahimik Avenue,SM City Davao,3.0
+Bago Aplaya,Tahimik Avenue,Ecoland Terminal Crossing,4.0
+Bago Aplaya,Tahimik Avenue,Almendras Gym,5.0
+Bago Aplaya,Tahimik Avenue,Roxas Avenue,8.0
+Bago Aplaya,Matina Crossing,ABS-CBN Junction,1.0
+Bago Aplaya,Matina Crossing,SM City Davao,2.0
+Bago Aplaya,Matina Crossing,Ecoland Terminal Crossing,3.0
+Bago Aplaya,Matina Crossing,Almendras Gym,4.0
+Bago Aplaya,Matina Crossing,Roxas Avenue,7.0
+Bago Aplaya,ABS-CBN Junction,SM City Davao,1.0
+Bago Aplaya,ABS-CBN Junction,Ecoland Terminal Crossing,2.0
+Bago Aplaya,ABS-CBN Junction,Almendras Gym,3.0
+Bago Aplaya,ABS-CBN Junction,Roxas Avenue,6.0
+Bago Aplaya,SM City Davao,Ecoland Terminal Crossing,1.0
+Bago Aplaya,SM City Davao,Almendras Gym,2.0
+Bago Aplaya,SM City Davao,Roxas Avenue,5.0
+Bago Aplaya,Ecoland Terminal Crossing,Almendras Gym,1.0
+Bago Aplaya,Ecoland Terminal Crossing,Roxas Avenue,4.0
+Bago Aplaya,Almendras Gym,Roxas Avenue,3.0
+Acacia-Indangan-Mahayag,Movie Homes,Jardin Residence,1.0
+Acacia-Indangan-Mahayag,Movie Homes,San Andres Chapel,2.0
+Acacia-Indangan-Mahayag,Movie Homes,Magno Farm,3.0
+Acacia-Indangan-Mahayag,Movie Homes,Dacudao Village,4.0
+Acacia-Indangan-Mahayag,Movie Homes,Pola Residence,5.0
+Acacia-Indangan-Mahayag,Movie Homes,El Dorado Farm,6.0
+Acacia-Indangan-Mahayag,Movie Homes,Country Homes,7.0
+Acacia-Indangan-Mahayag,Movie Homes,Kingdom Hall (Jehovah),8.0
+Acacia-Indangan-Mahayag,Movie Homes,Buhangin Memorial Park,9.0
+Acacia-Indangan-Mahayag,Movie Homes,Milan,10.0
+Acacia-Indangan-Mahayag,Movie Homes,Watusi St.,11.0
+Acacia-Indangan-Mahayag,Movie Homes,DLPC Bajada,12.0
+Acacia-Indangan-Mahayag,Movie Homes,Victoria Plaza,13.0
+Acacia-Indangan-Mahayag,Movie Homes,Gaisano Mall,14.0
+Acacia-Indangan-Mahayag,Movie Homes,Regina Complex,15.0
+Acacia-Indangan-Mahayag,Movie Homes,Corner San Pedro & Iñigo (Anda) Sts.,16.0
+Acacia-Indangan-Mahayag,Movie Homes,Bankerohan,17.0
+Acacia-Indangan-Mahayag,Jardin Residence,San Andres Chapel,1.0
+Acacia-Indangan-Mahayag,Jardin Residence,Magno Farm,2.0
+Acacia-Indangan-Mahayag,Jardin Residence,Dacudao Village,3.0
+Acacia-Indangan-Mahayag,Jardin Residence,Pola Residence,4.0
+Acacia-Indangan-Mahayag,Jardin Residence,El Dorado Farm,5.0
+Acacia-Indangan-Mahayag,Jardin Residence,Country Homes,6.0
+Acacia-Indangan-Mahayag,Jardin Residence,Kingdom Hall (Jehovah),7.0
+Acacia-Indangan-Mahayag,Jardin Residence,Buhangin Memorial Park,8.0
+Acacia-Indangan-Mahayag,Jardin Residence,Milan,9.0
+Acacia-Indangan-Mahayag,Jardin Residence,Watusi St.,10.0
+Acacia-Indangan-Mahayag,Jardin Residence,DLPC Bajada,11.0
+Acacia-Indangan-Mahayag,Jardin Residence,Victoria Plaza,12.0
+Acacia-Indangan-Mahayag,Jardin Residence,Gaisano Mall,13.0
+Acacia-Indangan-Mahayag,Jardin Residence,Regina Complex,14.0
+Acacia-Indangan-Mahayag,Jardin Residence,Corner San Pedro & Iñigo (Anda) Sts.,15.0
+Acacia-Indangan-Mahayag,Jardin Residence,Bankerohan,16.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Magno Farm,1.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Dacudao Village,2.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Pola Residence,3.0
+Acacia-Indangan-Mahayag,San Andres Chapel,El Dorado Farm,4.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Country Homes,5.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Kingdom Hall (Jehovah),6.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Buhangin Memorial Park,7.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Milan,8.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Watusi St.,9.0
+Acacia-Indangan-Mahayag,San Andres Chapel,DLPC Bajada,10.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Victoria Plaza,11.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Gaisano Mall,12.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Regina Complex,13.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Corner San Pedro & Iñigo (Anda) Sts.,14.0
+Acacia-Indangan-Mahayag,San Andres Chapel,Bankerohan,15.0
+Acacia-Indangan-Mahayag,Magno Farm,Dacudao Village,1.0
+Acacia-Indangan-Mahayag,Magno Farm,Pola Residence,2.0
+Acacia-Indangan-Mahayag,Magno Farm,El Dorado Farm,3.0
+Acacia-Indangan-Mahayag,Magno Farm,Country Homes,4.0
+Acacia-Indangan-Mahayag,Magno Farm,Kingdom Hall (Jehovah),5.0
+Acacia-Indangan-Mahayag,Magno Farm,Buhangin Memorial Park,6.0
+Acacia-Indangan-Mahayag,Magno Farm,Milan,7.0
+Acacia-Indangan-Mahayag,Magno Farm,Watusi St.,8.0
+Acacia-Indangan-Mahayag,Magno Farm,DLPC Bajada,9.0
+Acacia-Indangan-Mahayag,Magno Farm,Victoria Plaza,10.0
+Acacia-Indangan-Mahayag,Magno Farm,Gaisano Mall,11.0
+Acacia-Indangan-Mahayag,Magno Farm,Regina Complex,12.0
+Acacia-Indangan-Mahayag,Magno Farm,Corner San Pedro & Iñigo (Anda) Sts.,13.0
+Acacia-Indangan-Mahayag,Magno Farm,Bankerohan,14.0
+Acacia-Indangan-Mahayag,Dacudao Village,Pola Residence,1.0
+Acacia-Indangan-Mahayag,Dacudao Village,El Dorado Farm,2.0
+Acacia-Indangan-Mahayag,Dacudao Village,Country Homes,3.0
+Acacia-Indangan-Mahayag,Dacudao Village,Kingdom Hall (Jehovah),4.0
+Acacia-Indangan-Mahayag,Dacudao Village,Buhangin Memorial Park,5.0
+Acacia-Indangan-Mahayag,Dacudao Village,Milan,6.0
+Acacia-Indangan-Mahayag,Dacudao Village,Watusi St.,7.0
+Acacia-Indangan-Mahayag,Dacudao Village,DLPC Bajada,8.0
+Acacia-Indangan-Mahayag,Dacudao Village,Victoria Plaza,9.0
+Acacia-Indangan-Mahayag,Dacudao Village,Gaisano Mall,10.0
+Acacia-Indangan-Mahayag,Dacudao Village,Regina Complex,11.0
+Acacia-Indangan-Mahayag,Dacudao Village,Corner San Pedro & Iñigo (Anda) Sts.,12.0
+Acacia-Indangan-Mahayag,Dacudao Village,Bankerohan,13.0
+Acacia-Indangan-Mahayag,Pola Residence,El Dorado Farm,1.0
+Acacia-Indangan-Mahayag,Pola Residence,Country Homes,2.0
+Acacia-Indangan-Mahayag,Pola Residence,Kingdom Hall (Jehovah),3.0
+Acacia-Indangan-Mahayag,Pola Residence,Buhangin Memorial Park,4.0
+Acacia-Indangan-Mahayag,Pola Residence,Milan,5.0
+Acacia-Indangan-Mahayag,Pola Residence,Watusi St.,6.0
+Acacia-Indangan-Mahayag,Pola Residence,DLPC Bajada,7.0
+Acacia-Indangan-Mahayag,Pola Residence,Victoria Plaza,8.0
+Acacia-Indangan-Mahayag,Pola Residence,Gaisano Mall,9.0
+Acacia-Indangan-Mahayag,Pola Residence,Regina Complex,10.0
+Acacia-Indangan-Mahayag,Pola Residence,Corner San Pedro & Iñigo (Anda) Sts.,11.0
+Acacia-Indangan-Mahayag,Pola Residence,Bankerohan,12.0
+Acacia-Indangan-Mahayag,El Dorado Farm,Country Homes,1.0
+Acacia-Indangan-Mahayag,El Dorado Farm,Kingdom Hall (Jehovah),2.0
+Acacia-Indangan-Mahayag,El Dorado Farm,Buhangin Memorial Park,3.0
+Acacia-Indangan-Mahayag,El Dorado Farm,Milan,4.0
+Acacia-Indangan-Mahayag,El Dorado Farm,Watusi St.,5.0
+Acacia-Indangan-Mahayag,El Dorado Farm,DLPC Bajada,6.0
+Acacia-Indangan-Mahayag,El Dorado Farm,Victoria Plaza,7.0
+Acacia-Indangan-Mahayag,El Dorado Farm,Gaisano Mall,8.0
+Acacia-Indangan-Mahayag,El Dorado Farm,Regina Complex,9.0
+Acacia-Indangan-Mahayag,El Dorado Farm,Corner San Pedro & Iñigo (Anda) Sts.,10.0
+Acacia-Indangan-Mahayag,El Dorado Farm,Bankerohan,11.0
+Acacia-Indangan-Mahayag,Country Homes,Kingdom Hall (Jehovah),1.0
+Acacia-Indangan-Mahayag,Country Homes,Buhangin Memorial Park,2.0
+Acacia-Indangan-Mahayag,Country Homes,Milan,3.0
+Acacia-Indangan-Mahayag,Country Homes,Watusi St.,4.0
+Acacia-Indangan-Mahayag,Country Homes,DLPC Bajada,5.0
+Acacia-Indangan-Mahayag,Country Homes,Victoria Plaza,6.0
+Acacia-Indangan-Mahayag,Country Homes,Gaisano Mall,7.0
+Acacia-Indangan-Mahayag,Country Homes,Regina Complex,8.0
+Acacia-Indangan-Mahayag,Country Homes,Corner San Pedro & Iñigo (Anda) Sts.,9.0
+Acacia-Indangan-Mahayag,Country Homes,Bankerohan,10.0
+Acacia-Indangan-Mahayag,Kingdom Hall (Jehovah),Buhangin Memorial Park,1.0
+Acacia-Indangan-Mahayag,Kingdom Hall (Jehovah),Milan,2.0
+Acacia-Indangan-Mahayag,Kingdom Hall (Jehovah),Watusi St.,3.0
+Acacia-Indangan-Mahayag,Kingdom Hall (Jehovah),DLPC Bajada,4.0
+Acacia-Indangan-Mahayag,Kingdom Hall (Jehovah),Victoria Plaza,5.0
+Acacia-Indangan-Mahayag,Kingdom Hall (Jehovah),Gaisano Mall,6.0
+Acacia-Indangan-Mahayag,Kingdom Hall (Jehovah),Regina Complex,7.0
+Acacia-Indangan-Mahayag,Kingdom Hall (Jehovah),Corner San Pedro & Iñigo (Anda) Sts.,8.0
+Acacia-Indangan-Mahayag,Kingdom Hall (Jehovah),Bankerohan,9.0
+Acacia-Indangan-Mahayag,Buhangin Memorial Park,Milan,1.0
+Acacia-Indangan-Mahayag,Buhangin Memorial Park,Watusi St.,2.0
+Acacia-Indangan-Mahayag,Buhangin Memorial Park,DLPC Bajada,3.0
+Acacia-Indangan-Mahayag,Buhangin Memorial Park,Victoria Plaza,4.0
+Acacia-Indangan-Mahayag,Buhangin Memorial Park,Gaisano Mall,5.0
+Acacia-Indangan-Mahayag,Buhangin Memorial Park,Regina Complex,6.0
+Acacia-Indangan-Mahayag,Buhangin Memorial Park,Corner San Pedro & Iñigo (Anda) Sts.,7.0
+Acacia-Indangan-Mahayag,Buhangin Memorial Park,Bankerohan,8.0
+Acacia-Indangan-Mahayag,Milan,Watusi St.,1.0
+Acacia-Indangan-Mahayag,Milan,DLPC Bajada,2.0
+Acacia-Indangan-Mahayag,Milan,Victoria Plaza,3.0
+Acacia-Indangan-Mahayag,Milan,Gaisano Mall,4.0
+Acacia-Indangan-Mahayag,Milan,Regina Complex,5.0
+Acacia-Indangan-Mahayag,Milan,Corner San Pedro & Iñigo (Anda) Sts.,6.0
+Acacia-Indangan-Mahayag,Milan,Bankerohan,7.0
+Acacia-Indangan-Mahayag,Watusi St.,DLPC Bajada,1.0
+Acacia-Indangan-Mahayag,Watusi St.,Victoria Plaza,2.0
+Acacia-Indangan-Mahayag,Watusi St.,Gaisano Mall,3.0
+Acacia-Indangan-Mahayag,Watusi St.,Regina Complex,4.0
+Acacia-Indangan-Mahayag,Watusi St.,Corner San Pedro & Iñigo (Anda) Sts.,5.0
+Acacia-Indangan-Mahayag,Watusi St.,Bankerohan,6.0
+Acacia-Indangan-Mahayag,DLPC Bajada,Victoria Plaza,1.0
+Acacia-Indangan-Mahayag,DLPC Bajada,Gaisano Mall,2.0
+Acacia-Indangan-Mahayag,DLPC Bajada,Regina Complex,3.0
+Acacia-Indangan-Mahayag,DLPC Bajada,Corner San Pedro & Iñigo (Anda) Sts.,4.0
+Acacia-Indangan-Mahayag,DLPC Bajada,Bankerohan,5.0
+Acacia-Indangan-Mahayag,Victoria Plaza,Gaisano Mall,1.0
+Acacia-Indangan-Mahayag,Victoria Plaza,Regina Complex,2.0
+Acacia-Indangan-Mahayag,Victoria Plaza,Corner San Pedro & Iñigo (Anda) Sts.,3.0
+Acacia-Indangan-Mahayag,Victoria Plaza,Bankerohan,4.0
+Acacia-Indangan-Mahayag,Gaisano Mall,Regina Complex,1.0
+Acacia-Indangan-Mahayag,Gaisano Mall,Corner San Pedro & Iñigo (Anda) Sts.,2.0
+Acacia-Indangan-Mahayag,Gaisano Mall,Bankerohan,3.0
+Acacia-Indangan-Mahayag,Regina Complex,Corner San Pedro & Iñigo (Anda) Sts.,1.0
+Acacia-Indangan-Mahayag,Regina Complex,Bankerohan,2.0
+Acacia-Indangan-Mahayag,Corner San Pedro & Iñigo (Anda) Sts.,Bankerohan,1.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),San Antonio VII (front GSIS),1.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),Davao Exec. Homes (Quimpo Blvd.),2.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),SM City Davao,3.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),Philhealth Office,4.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),Agro School Foundation,5.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),Almendras Gym,6.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),BPI (Claveria),7.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),Guerrero cor. Magsaysay Ave.,8.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),F. Bangoy cor. Magsaysay Ave.,9.0
+Catitipan via Dacudao,NHA Crossing (San Antonio Buhangin),Magsaysay Ave. (Park),9.3
+Catitipan via Dacudao,San Antonio VII (front GSIS),Davao Exec. Homes (Quimpo Blvd.),1.0
+Catitipan via Dacudao,San Antonio VII (front GSIS),SM City Davao,2.0
+Catitipan via Dacudao,San Antonio VII (front GSIS),Philhealth Office,3.0
+Catitipan via Dacudao,San Antonio VII (front GSIS),Agro School Foundation,4.0
+Catitipan via Dacudao,San Antonio VII (front GSIS),Almendras Gym,5.0
+Catitipan via Dacudao,San Antonio VII (front GSIS),BPI (Claveria),6.0
+Catitipan via Dacudao,San Antonio VII (front GSIS),Guerrero cor. Magsaysay Ave.,7.0
+Catitipan via Dacudao,San Antonio VII (front GSIS),F. Bangoy cor. Magsaysay Ave.,8.0
+Catitipan via Dacudao,San Antonio VII (front GSIS),Magsaysay Ave. (Park),8.3
+Catitipan via Dacudao,Davao Exec. Homes (Quimpo Blvd.),SM City Davao,1.0
+Catitipan via Dacudao,Davao Exec. Homes (Quimpo Blvd.),Philhealth Office,2.0
+Catitipan via Dacudao,Davao Exec. Homes (Quimpo Blvd.),Agro School Foundation,3.0
+Catitipan via Dacudao,Davao Exec. Homes (Quimpo Blvd.),Almendras Gym,4.0
+Catitipan via Dacudao,Davao Exec. Homes (Quimpo Blvd.),BPI (Claveria),5.0
+Catitipan via Dacudao,Davao Exec. Homes (Quimpo Blvd.),Guerrero cor. Magsaysay Ave.,6.0
+Catitipan via Dacudao,Davao Exec. Homes (Quimpo Blvd.),F. Bangoy cor. Magsaysay Ave.,7.0
+Catitipan via Dacudao,Davao Exec. Homes (Quimpo Blvd.),Magsaysay Ave. (Park),7.3
+Catitipan via Dacudao,SM City Davao,Philhealth Office,1.0
+Catitipan via Dacudao,SM City Davao,Agro School Foundation,2.0
+Catitipan via Dacudao,SM City Davao,Almendras Gym,3.0
+Catitipan via Dacudao,SM City Davao,BPI (Claveria),4.0
+Catitipan via Dacudao,SM City Davao,Guerrero cor. Magsaysay Ave.,5.0
+Catitipan via Dacudao,SM City Davao,F. Bangoy cor. Magsaysay Ave.,6.0
+Catitipan via Dacudao,SM City Davao,Magsaysay Ave. (Park),6.3
+Catitipan via Dacudao,Philhealth Office,Agro School Foundation,1.0
+Catitipan via Dacudao,Philhealth Office,Almendras Gym,2.0
+Catitipan via Dacudao,Philhealth Office,BPI (Claveria),3.0
+Catitipan via Dacudao,Philhealth Office,Guerrero cor. Magsaysay Ave.,4.0
+Catitipan via Dacudao,Philhealth Office,F. Bangoy cor. Magsaysay Ave.,5.0
+Catitipan via Dacudao,Philhealth Office,Magsaysay Ave. (Park),5.3
+Catitipan via Dacudao,Agro School Foundation,Almendras Gym,1.0
+Catitipan via Dacudao,Agro School Foundation,BPI (Claveria),2.0
+Catitipan via Dacudao,Agro School Foundation,Guerrero cor. Magsaysay Ave.,3.0
+Catitipan via Dacudao,Agro School Foundation,F. Bangoy cor. Magsaysay Ave.,4.0
+Catitipan via Dacudao,Agro School Foundation,Magsaysay Ave. (Park),4.3
+Catitipan via Dacudao,Almendras Gym,BPI (Claveria),1.0
+Catitipan via Dacudao,Almendras Gym,Guerrero cor. Magsaysay Ave.,2.0
+Catitipan via Dacudao,Almendras Gym,F. Bangoy cor. Magsaysay Ave.,3.0
+Catitipan via Dacudao,Almendras Gym,Magsaysay Ave. (Park),3.3
+Catitipan via Dacudao,BPI (Claveria),Guerrero cor. Magsaysay Ave.,1.0
+Catitipan via Dacudao,BPI (Claveria),F. Bangoy cor. Magsaysay Ave.,2.0
+Catitipan via Dacudao,BPI (Claveria),Magsaysay Ave. (Park),2.3
+Catitipan via Dacudao,Guerrero cor. Magsaysay Ave.,F. Bangoy cor. Magsaysay Ave.,1.0
+Catitipan via Dacudao,Guerrero cor. Magsaysay Ave.,Magsaysay Ave. (Park),1.3
+Catitipan via Dacudao,F. Bangoy cor. Magsaysay Ave.,Magsaysay Ave. (Park),0.3
+Catitipan via JP Laurel Avenue,NHA Crossing (San Antonio Buhangin),San Antonio VII (front GSIS),1.0
+Catitipan via JP Laurel Avenue,NHA Crossing (San Antonio Buhangin),Davao Exec. Homes (Quimpo Blvd.),2.0
+Catitipan via JP Laurel Avenue,NHA Crossing (San Antonio Buhangin),SM City Davao,3.0
+Catitipan via JP Laurel Avenue,NHA Crossing (San Antonio Buhangin),Philhealth Office,4.0
+Catitipan via JP Laurel Avenue,NHA Crossing (San Antonio Buhangin),Agro School Foundation,5.0
+Catitipan via JP Laurel Avenue,NHA Crossing (San Antonio Buhangin),Almendras Gym,6.0
+Catitipan via JP Laurel Avenue,NHA Crossing (San Antonio Buhangin),BPI (Claveria),7.0
+Catitipan via JP Laurel Avenue,NHA Crossing (San Antonio Buhangin),Guerrero cor. Magsaysay Ave.,8.0
+Catitipan via JP Laurel Avenue,NHA Crossing (San Antonio Buhangin),F. Bangoy cor. Magsaysay Ave.,9.0
+Catitipan via JP Laurel Avenue,NHA Crossing (San Antonio Buhangin),Magsaysay Ave. (Park),9.3
+Catitipan via JP Laurel Avenue,San Antonio VII (front GSIS),Davao Exec. Homes (Quimpo Blvd.),1.0
+Catitipan via JP Laurel Avenue,San Antonio VII (front GSIS),SM City Davao,2.0
+Catitipan via JP Laurel Avenue,San Antonio VII (front GSIS),Philhealth Office,3.0
+Catitipan via JP Laurel Avenue,San Antonio VII (front GSIS),Agro School Foundation,4.0
+Catitipan via JP Laurel Avenue,San Antonio VII (front GSIS),Almendras Gym,5.0
+Catitipan via JP Laurel Avenue,San Antonio VII (front GSIS),BPI (Claveria),6.0
+Catitipan via JP Laurel Avenue,San Antonio VII (front GSIS),Guerrero cor. Magsaysay Ave.,7.0
+Catitipan via JP Laurel Avenue,San Antonio VII (front GSIS),F. Bangoy cor. Magsaysay Ave.,8.0
+Catitipan via JP Laurel Avenue,San Antonio VII (front GSIS),Magsaysay Ave. (Park),8.3
+Catitipan via JP Laurel Avenue,Davao Exec. Homes (Quimpo Blvd.),SM City Davao,1.0
+Catitipan via JP Laurel Avenue,Davao Exec. Homes (Quimpo Blvd.),Philhealth Office,2.0
+Catitipan via JP Laurel Avenue,Davao Exec. Homes (Quimpo Blvd.),Agro School Foundation,3.0
+Catitipan via JP Laurel Avenue,Davao Exec. Homes (Quimpo Blvd.),Almendras Gym,4.0
+Catitipan via JP Laurel Avenue,Davao Exec. Homes (Quimpo Blvd.),BPI (Claveria),5.0
+Catitipan via JP Laurel Avenue,Davao Exec. Homes (Quimpo Blvd.),Guerrero cor. Magsaysay Ave.,6.0
+Catitipan via JP Laurel Avenue,Davao Exec. Homes (Quimpo Blvd.),F. Bangoy cor. Magsaysay Ave.,7.0
+Catitipan via JP Laurel Avenue,Davao Exec. Homes (Quimpo Blvd.),Magsaysay Ave. (Park),7.3
+Catitipan via JP Laurel Avenue,SM City Davao,Philhealth Office,1.0
+Catitipan via JP Laurel Avenue,SM City Davao,Agro School Foundation,2.0
+Catitipan via JP Laurel Avenue,SM City Davao,Almendras Gym,3.0
+Catitipan via JP Laurel Avenue,SM City Davao,BPI (Claveria),4.0
+Catitipan via JP Laurel Avenue,SM City Davao,Guerrero cor. Magsaysay Ave.,5.0
+Catitipan via JP Laurel Avenue,SM City Davao,F. Bangoy cor. Magsaysay Ave.,6.0
+Catitipan via JP Laurel Avenue,SM City Davao,Magsaysay Ave. (Park),6.3
+Catitipan via JP Laurel Avenue,Philhealth Office,Agro School Foundation,1.0
+Catitipan via JP Laurel Avenue,Philhealth Office,Almendras Gym,2.0
+Catitipan via JP Laurel Avenue,Philhealth Office,BPI (Claveria),3.0
+Catitipan via JP Laurel Avenue,Philhealth Office,Guerrero cor. Magsaysay Ave.,4.0
+Catitipan via JP Laurel Avenue,Philhealth Office,F. Bangoy cor. Magsaysay Ave.,5.0
+Catitipan via JP Laurel Avenue,Philhealth Office,Magsaysay Ave. (Park),5.3
+Catitipan via JP Laurel Avenue,Agro School Foundation,Almendras Gym,1.0
+Catitipan via JP Laurel Avenue,Agro School Foundation,BPI (Claveria),2.0
+Catitipan via JP Laurel Avenue,Agro School Foundation,Guerrero cor. Magsaysay Ave.,3.0
+Catitipan via JP Laurel Avenue,Agro School Foundation,F. Bangoy cor. Magsaysay Ave.,4.0
+Catitipan via JP Laurel Avenue,Agro School Foundation,Magsaysay Ave. (Park),4.3
+Catitipan via JP Laurel Avenue,Almendras Gym,BPI (Claveria),1.0
+Catitipan via JP Laurel Avenue,Almendras Gym,Guerrero cor. Magsaysay Ave.,2.0
+Catitipan via JP Laurel Avenue,Almendras Gym,F. Bangoy cor. Magsaysay Ave.,3.0
+Catitipan via JP Laurel Avenue,Almendras Gym,Magsaysay Ave. (Park),3.3
+Catitipan via JP Laurel Avenue,BPI (Claveria),Guerrero cor. Magsaysay Ave.,1.0
+Catitipan via JP Laurel Avenue,BPI (Claveria),F. Bangoy cor. Magsaysay Ave.,2.0
+Catitipan via JP Laurel Avenue,BPI (Claveria),Magsaysay Ave. (Park),2.3
+Catitipan via JP Laurel Avenue,Guerrero cor. Magsaysay Ave.,F. Bangoy cor. Magsaysay Ave.,1.0
+Catitipan via JP Laurel Avenue,Guerrero cor. Magsaysay Ave.,Magsaysay Ave. (Park),1.3
+Catitipan via JP Laurel Avenue,F. Bangoy cor. Magsaysay Ave.,Magsaysay Ave. (Park),0.3
+Communal / Country Homes,Country Homes,Kingdom Hall (Jehovah),1.0
+Communal / Country Homes,Country Homes,Buhangin Memorial Park,2.0
+Communal / Country Homes,Country Homes,Milan,3.0
+Communal / Country Homes,Country Homes,Watusi St.,4.0
+Communal / Country Homes,Country Homes,DLPC Bajada,5.0
+Communal / Country Homes,Country Homes,Victoria Plaza,6.0
+Communal / Country Homes,Country Homes,Gaisano Mall,7.0
+Communal / Country Homes,Country Homes,Regina Complex,8.0
+Communal / Country Homes,Country Homes,Corner San Pedro & Iñigo (Anda) Sts.,9.0
+Communal / Country Homes,Country Homes,Bankerohan,10.0
+Communal / Country Homes,Kingdom Hall (Jehovah),Buhangin Memorial Park,1.0
+Communal / Country Homes,Kingdom Hall (Jehovah),Milan,2.0
+Communal / Country Homes,Kingdom Hall (Jehovah),Watusi St.,3.0
+Communal / Country Homes,Kingdom Hall (Jehovah),DLPC Bajada,4.0
+Communal / Country Homes,Kingdom Hall (Jehovah),Victoria Plaza,5.0
+Communal / Country Homes,Kingdom Hall (Jehovah),Gaisano Mall,6.0
+Communal / Country Homes,Kingdom Hall (Jehovah),Regina Complex,7.0
+Communal / Country Homes,Kingdom Hall (Jehovah),Corner San Pedro & Iñigo (Anda) Sts.,8.0
+Communal / Country Homes,Kingdom Hall (Jehovah),Bankerohan,9.0
+Communal / Country Homes,Buhangin Memorial Park,Milan,1.0
+Communal / Country Homes,Buhangin Memorial Park,Watusi St.,2.0
+Communal / Country Homes,Buhangin Memorial Park,DLPC Bajada,3.0
+Communal / Country Homes,Buhangin Memorial Park,Victoria Plaza,4.0
+Communal / Country Homes,Buhangin Memorial Park,Gaisano Mall,5.0
+Communal / Country Homes,Buhangin Memorial Park,Regina Complex,6.0
+Communal / Country Homes,Buhangin Memorial Park,Corner San Pedro & Iñigo (Anda) Sts.,7.0
+Communal / Country Homes,Buhangin Memorial Park,Bankerohan,8.0
+Communal / Country Homes,Milan,Watusi St.,1.0
+Communal / Country Homes,Milan,DLPC Bajada,2.0
+Communal / Country Homes,Milan,Victoria Plaza,3.0
+Communal / Country Homes,Milan,Gaisano Mall,4.0
+Communal / Country Homes,Milan,Regina Complex,5.0
+Communal / Country Homes,Milan,Corner San Pedro & Iñigo (Anda) Sts.,6.0
+Communal / Country Homes,Milan,Bankerohan,7.0
+Communal / Country Homes,Watusi St.,DLPC Bajada,1.0
+Communal / Country Homes,Watusi St.,Victoria Plaza,2.0
+Communal / Country Homes,Watusi St.,Gaisano Mall,3.0
+Communal / Country Homes,Watusi St.,Regina Complex,4.0
+Communal / Country Homes,Watusi St.,Corner San Pedro & Iñigo (Anda) Sts.,5.0
+Communal / Country Homes,Watusi St.,Bankerohan,6.0
+Communal / Country Homes,DLPC Bajada,Victoria Plaza,1.0
+Communal / Country Homes,DLPC Bajada,Gaisano Mall,2.0
+Communal / Country Homes,DLPC Bajada,Regina Complex,3.0
+Communal / Country Homes,DLPC Bajada,Corner San Pedro & Iñigo (Anda) Sts.,4.0
+Communal / Country Homes,DLPC Bajada,Bankerohan,5.0
+Communal / Country Homes,Victoria Plaza,Gaisano Mall,1.0
+Communal / Country Homes,Victoria Plaza,Regina Complex,2.0
+Communal / Country Homes,Victoria Plaza,Corner San Pedro & Iñigo (Anda) Sts.,3.0
+Communal / Country Homes,Victoria Plaza,Bankerohan,4.0
+Communal / Country Homes,Gaisano Mall,Regina Complex,1.0
+Communal / Country Homes,Gaisano Mall,Corner San Pedro & Iñigo (Anda) Sts.,2.0
+Communal / Country Homes,Gaisano Mall,Bankerohan,3.0
+Communal / Country Homes,Regina Complex,Corner San Pedro & Iñigo (Anda) Sts.,1.0
+Communal / Country Homes,Regina Complex,Bankerohan,2.0
+Communal / Country Homes,Corner San Pedro & Iñigo (Anda) Sts.,Bankerohan,1.0
+Dacoville,San Antonio VII (front GSIS),Davao Exec. Homes (Quimpo Blvd.),1.0
+Dacoville,San Antonio VII (front GSIS),SM City Davao,2.0
+Dacoville,San Antonio VII (front GSIS),Philhealth Office,3.0
+Dacoville,San Antonio VII (front GSIS),Agro School Foundation,4.0
+Dacoville,San Antonio VII (front GSIS),Almendras Gym,5.0
+Dacoville,San Antonio VII (front GSIS),BPI (Claveria),6.0
+Dacoville,San Antonio VII (front GSIS),Guerrero cor. Magsaysay Ave.,7.0
+Dacoville,San Antonio VII (front GSIS),F. Bangoy cor. Magsaysay Ave.,8.0
+Dacoville,San Antonio VII (front GSIS),Magsaysay Ave. (Park),9.0
+Dacoville,Davao Exec. Homes (Quimpo Blvd.),SM City Davao,1.0
+Dacoville,Davao Exec. Homes (Quimpo Blvd.),Philhealth Office,2.0
+Dacoville,Davao Exec. Homes (Quimpo Blvd.),Agro School Foundation,3.0
+Dacoville,Davao Exec. Homes (Quimpo Blvd.),Almendras Gym,4.0
+Dacoville,Davao Exec. Homes (Quimpo Blvd.),BPI (Claveria),5.0
+Dacoville,Davao Exec. Homes (Quimpo Blvd.),Guerrero cor. Magsaysay Ave.,6.0
+Dacoville,Davao Exec. Homes (Quimpo Blvd.),F. Bangoy cor. Magsaysay Ave.,7.0
+Dacoville,Davao Exec. Homes (Quimpo Blvd.),Magsaysay Ave. (Park),8.0
+Dacoville,SM City Davao,Philhealth Office,1.0
+Dacoville,SM City Davao,Agro School Foundation,2.0
+Dacoville,SM City Davao,Almendras Gym,3.0
+Dacoville,SM City Davao,BPI (Claveria),4.0
+Dacoville,SM City Davao,Guerrero cor. Magsaysay Ave.,5.0
+Dacoville,SM City Davao,F. Bangoy cor. Magsaysay Ave.,6.0
+Dacoville,SM City Davao,Magsaysay Ave. (Park),7.0
+Dacoville,Philhealth Office,Agro School Foundation,1.0
+Dacoville,Philhealth Office,Almendras Gym,2.0
+Dacoville,Philhealth Office,BPI (Claveria),3.0
+Dacoville,Philhealth Office,Guerrero cor. Magsaysay Ave.,4.0
+Dacoville,Philhealth Office,F. Bangoy cor. Magsaysay Ave.,5.0
+Dacoville,Philhealth Office,Magsaysay Ave. (Park),6.0
+Dacoville,Agro School Foundation,Almendras Gym,1.0
+Dacoville,Agro School Foundation,BPI (Claveria),2.0
+Dacoville,Agro School Foundation,Guerrero cor. Magsaysay Ave.,3.0
+Dacoville,Agro School Foundation,F. Bangoy cor. Magsaysay Ave.,4.0
+Dacoville,Agro School Foundation,Magsaysay Ave. (Park),5.0
+Dacoville,Almendras Gym,BPI (Claveria),1.0
+Dacoville,Almendras Gym,Guerrero cor. Magsaysay Ave.,2.0
+Dacoville,Almendras Gym,F. Bangoy cor. Magsaysay Ave.,3.0
+Dacoville,Almendras Gym,Magsaysay Ave. (Park),4.0
+Dacoville,BPI (Claveria),Guerrero cor. Magsaysay Ave.,1.0
+Dacoville,BPI (Claveria),F. Bangoy cor. Magsaysay Ave.,2.0
+Dacoville,BPI (Claveria),Magsaysay Ave. (Park),3.0
+Dacoville,Guerrero cor. Magsaysay Ave.,F. Bangoy cor. Magsaysay Ave.,1.0
+Dacoville,Guerrero cor. Magsaysay Ave.,Magsaysay Ave. (Park),2.0
+Dacoville,F. Bangoy cor. Magsaysay Ave.,Magsaysay Ave. (Park),1.0
+Darong Route,Baracatan,Toril,1.0
+Darong Route,Baracatan,Victoria Plaza,2.0
+Darong Route,Baracatan,Gaisano Mall,3.0
+Darong Route,Baracatan,Regina Complex,4.0
+Darong Route,Baracatan,Corner San Pedro & Iñigo (Anda) Sts.,5.0
+Darong Route,Baracatan,Bankerohan,6.0
+Darong Route,Toril,Victoria Plaza,1.0
+Darong Route,Toril,Gaisano Mall,2.0
+Darong Route,Toril,Regina Complex,3.0
+Darong Route,Toril,Corner San Pedro & Iñigo (Anda) Sts.,4.0
+Darong Route,Toril,Bankerohan,5.0
+Darong Route,Victoria Plaza,Gaisano Mall,1.0
+Darong Route,Victoria Plaza,Regina Complex,2.0
+Darong Route,Victoria Plaza,Corner San Pedro & Iñigo (Anda) Sts.,3.0
+Darong Route,Victoria Plaza,Bankerohan,4.0
+Darong Route,Gaisano Mall,Regina Complex,1.0
+Darong Route,Gaisano Mall,Corner San Pedro & Iñigo (Anda) Sts.,2.0
+Darong Route,Gaisano Mall,Bankerohan,3.0
+Darong Route,Regina Complex,Corner San Pedro & Iñigo (Anda) Sts.,1.0
+Darong Route,Regina Complex,Bankerohan,2.0
+Darong Route,Corner San Pedro & Iñigo (Anda) Sts.,Bankerohan,1.0 

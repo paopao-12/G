@@ -1,4 +1,4 @@
-import { PassengerType, RouteSuggestion } from './index';
+import { RouteSuggestion, LocationOption, PassengerType } from './index';
 
 export type RootStackParamList = {
   Home: undefined;
