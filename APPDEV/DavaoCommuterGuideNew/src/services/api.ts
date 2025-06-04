@@ -29,26 +29,28 @@ const MOCK_DATA = {
             id: 1,
             name: "Route 1: Bangkal - Roxas",
             stops: [
-                { stop_id: 1, stop_name: "Bangkal Terminal", sequence: 1, latitude: 7.0722, longitude: 125.6131 },
-                { stop_id: 2, stop_name: "Roxas Avenue", sequence: 2, latitude: 7.0733, longitude: 125.6144 },
-                { stop_id: 3, stop_name: "San Pedro Street", sequence: 3, latitude: 7.0744, longitude: 125.6155 },
+                { stop_id: 1, stop_name: "DXSS (Bangkal)", sequence: 1, latitude: 7.0722, longitude: 125.6131 },
+                { stop_id: 2, stop_name: "Roxas Avenue", sequence: 2, latitude: 7.0744, longitude: 125.6155 },
+                { stop_id: 3, stop_name: "SM City Davao", sequence: 3, latitude: 7.0733, longitude: 125.6144 },
             ]
         },
         {
             id: 2,
             name: "Route 2: Matina - Ecoland",
             stops: [
-                { stop_id: 4, stop_name: "Matina Terminal", sequence: 1, latitude: 7.0822, longitude: 125.6231 },
-                { stop_id: 5, stop_name: "Ecoland Terminal", sequence: 2, latitude: 7.0833, longitude: 125.6244 },
+                { stop_id: 4, stop_name: "Matina Crossing", sequence: 1, latitude: 7.0822, longitude: 125.6231 },
+                { stop_id: 5, stop_name: "Ecoland Terminal Crossing", sequence: 2, latitude: 7.0833, longitude: 125.6244 },
+                { stop_id: 6, stop_name: "Victoria Plaza", sequence: 3, latitude: 7.0833, longitude: 125.6244 },
             ]
         }
     ],
     stops: [
-        { id: 1, name: "Bangkal Terminal", latitude: 7.0722, longitude: 125.6131 },
-        { id: 2, name: "Roxas Avenue", latitude: 7.0733, longitude: 125.6144 },
-        { id: 3, name: "San Pedro Street", latitude: 7.0744, longitude: 125.6155 },
-        { id: 4, name: "Matina Terminal", latitude: 7.0822, longitude: 125.6231 },
-        { id: 5, name: "Ecoland Terminal", latitude: 7.0833, longitude: 125.6244 },
+        { id: 1, name: "DXSS (Bangkal)", latitude: 7.0722, longitude: 125.6131 },
+        { id: 2, name: "Roxas Avenue", latitude: 7.0744, longitude: 125.6155 },
+        { id: 3, name: "SM City Davao", latitude: 7.0733, longitude: 125.6144 },
+        { id: 4, name: "Matina Crossing", latitude: 7.0822, longitude: 125.6231 },
+        { id: 5, name: "Ecoland Terminal Crossing", latitude: 7.0833, longitude: 125.6244 },
+        { id: 6, name: "Victoria Plaza", latitude: 7.0833, longitude: 125.6244 },
     ]
 };
 
@@ -167,6 +169,7 @@ export interface Stop {
     name: string;
     latitude: number;
     longitude: number;
+    distance?: number;
 }
 
 export interface RouteStop {
@@ -176,6 +179,7 @@ export interface RouteStop {
     distance_to_next?: number;
     latitude: number;
     longitude: number;
+    accessibility?: number;
 }
 
 export interface Route {
@@ -193,6 +197,7 @@ export interface FareInfo {
 export interface UserLocation {
     latitude: number;
     longitude: number;
+    timestamp?: number;
 }
 
 export interface NearestStop {
@@ -207,6 +212,8 @@ export interface RouteSuggestion {
     estimatedFare: number;
     distance: number;
     duration: number; 
+    accessibilityScore?: number;
+    trafficLevel?: number | null;
 }
 
 export interface JeepneyLocation {
@@ -234,9 +241,11 @@ export interface RouteFilter {
     maxDistance?: number;
     maxFare?: number;
     maxDuration?: number;
-    preferredRoutes?: number[];
+    timeOfDay?: boolean;
     avoidRoutes?: number[];
-    timeOfDay?: 'morning' | 'afternoon' | 'evening' | 'night';
+    preferredRoutes?: number[];
+    accessibility?: boolean;
+    trafficAware?: boolean;
 }
 
 export interface TrafficData {
@@ -324,7 +333,7 @@ const cacheData = async <T>(key: string, data: T): Promise<void> => {
 };
 
 
-const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+export const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371e3; 
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
@@ -350,42 +359,20 @@ const testBackendConnection = async (): Promise<boolean> => {
 
 const api = {
  
-    getRoutes: async (): Promise<Route[]> => {
+    getRoutes: async (latitude?: number, longitude?: number): Promise<Route[]> => {
         try {
-            
-            const cachedRoutes = await getCachedData<Route[]>(STORAGE_KEYS.ROUTES);
-            const cacheValid = await isCacheValid();
-
-            if (cachedRoutes && cacheValid) {
-                console.log('Using cached routes data');
-                return cachedRoutes;
+            let url = `${API_URL}/routes`;
+            if (latitude && longitude) {
+                url += `?latitude=${latitude}&longitude=${longitude}`;
             }
-
-            
-            try {
-                const routes = await retryRequest(() => 
-                    axiosInstance.get('/routes').then(res => res.data)
-                );
-                
-             
-                await cacheData(STORAGE_KEYS.ROUTES, routes);
-                await updateLastSync();
-                
-                return routes;
-            } catch (error) {
-                
-                const cachedRoutes = await getCachedData<Route[]>(STORAGE_KEYS.ROUTES);
-                if (cachedRoutes) {
-                    console.log('Network error, using cached routes data');
-                    return cachedRoutes;
-                }
-                
-                console.log('No cached data, using mock routes data');
-                return MOCK_DATA.routes;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('Failed to fetch routes');
             }
+            return await response.json();
         } catch (error) {
             console.error('Error fetching routes:', error);
-            throw new Error('Failed to fetch routes');
+            throw error;
         }
     },
 
@@ -568,72 +555,83 @@ const api = {
         filters?: RouteFilter
     ): Promise<RouteSuggestion[]> => {
         try {
+            console.log('Using mock route suggestions');
+            
+            // For testing, we'll use our mock data directly
+            const routes = MOCK_DATA.routes;
+            const suggestions: RouteSuggestion[] = [];
 
-            const originStops = await api.findNearestStops(originLocation, filters?.maxDistance);
-            const destinationStops = await api.findNearestStops(destinationLocation, filters?.maxDistance);
+            // Find the nearest stops from our mock data
+            const originStops = MOCK_DATA.stops.map(stop => ({
+                stop,
+                distance: calculateDistance(
+                    originLocation.latitude,
+                    originLocation.longitude,
+                    stop.latitude,
+                    stop.longitude
+                )
+            })).sort((a, b) => a.distance - b.distance);
 
-            if (originStops.length === 0 || destinationStops.length === 0) {
+            const destinationStops = MOCK_DATA.stops.map(stop => ({
+                stop,
+                distance: calculateDistance(
+                    destinationLocation.latitude,
+                    destinationLocation.longitude,
+                    stop.latitude,
+                    stop.longitude
+                )
+            })).sort((a, b) => a.distance - b.distance);
+
+            // Get the nearest origin and destination stops
+            const nearestOrigin = originStops[0];
+            const nearestDest = destinationStops[0];
+
+            if (!nearestOrigin || !nearestDest) {
                 throw new Error('No stops found near the selected locations');
             }
 
-         
-            const routes = await api.getRoutes();
-            const suggestions: RouteSuggestion[] = [];
-
-          
+            // Find routes that contain both stops
             for (const route of routes) {
-              
-                if (filters?.avoidRoutes?.includes(route.id)) continue;
-
-               
-                if (filters?.preferredRoutes && !filters.preferredRoutes.includes(route.id)) continue;
-
                 const originStopIndex = route.stops.findIndex(
-                    stop => stop.stop_id === originStops[0].stop.id
+                    stop => stop.stop_id === nearestOrigin.stop.id
                 );
                 const destinationStopIndex = route.stops.findIndex(
-                    stop => stop.stop_id === destinationStops[0].stop.id
+                    stop => stop.stop_id === nearestDest.stop.id
                 );
 
                 if (originStopIndex !== -1 && destinationStopIndex !== -1 && originStopIndex < destinationStopIndex) {
-                 
+                    // Calculate total distance
                     let totalDistance = 0;
                     for (let i = originStopIndex; i < destinationStopIndex; i++) {
-                        totalDistance += route.stops[i].distance_to_next || 0;
+                        const nextStop = route.stops[i + 1];
+                        totalDistance += calculateDistance(
+                            route.stops[i].latitude,
+                            route.stops[i].longitude,
+                            nextStop.latitude,
+                            nextStop.longitude
+                        );
                     }
 
-                
-                    const fareInfo = await api.getFare(
-                        originStops[0].stop.id,
-                        destinationStops[0].stop.id
-                    );
+                    // Calculate duration (assuming average speed of 20 km/h)
+                    const duration = (totalDistance / 1000) / 20 * 60; // in minutes
 
-                    const duration = (totalDistance / 20) * 60; // in minutes
-
-             
-                    if (filters?.maxFare && fareInfo.fare > filters.maxFare) continue;
-                    if (filters?.maxDuration && duration > filters.maxDuration) continue;
-
-                 
-                    let adjustedDuration = duration;
-                    if (filters?.timeOfDay) {
-                        const hour = new Date().getHours();
-                        const isRushHour = (hour >= 7 && hour <= 9) || (hour >= 16 && hour <= 18);
-                        adjustedDuration = isRushHour ? duration * 1.5 : duration;
-                    }
+                    // Calculate fare (₱10 base + ₱2 per km)
+                    const fare = Math.ceil(10 + ((totalDistance / 1000) * 2));
 
                     suggestions.push({
                         route,
                         originStop: route.stops[originStopIndex],
                         destinationStop: route.stops[destinationStopIndex],
-                        estimatedFare: fareInfo.fare,
+                        estimatedFare: fare,
                         distance: totalDistance,
-                        duration: adjustedDuration,
+                        duration: duration,
+                        accessibilityScore: 1,
+                        trafficLevel: null
                     });
                 }
             }
 
-            return suggestions.sort((a, b) => a.distance - b.distance);
+            return suggestions.sort((a, b) => a.duration - b.duration);
         } catch (error) {
             console.error('Error getting route suggestions:', error);
             throw new Error('Failed to get route suggestions');
@@ -748,6 +746,21 @@ const api = {
         } catch (error) {
             console.error('Error checking offline mode:', error);
             return false;
+        }
+    },
+
+    getNearbyStops: async (latitude: number, longitude: number, radius: number = 1): Promise<Stop[]> => {
+        try {
+            const response = await fetch(
+                `${API_URL}/stops/nearby?latitude=${latitude}&longitude=${longitude}&radius=${radius}`
+            );
+            if (!response.ok) {
+                throw new Error('Failed to fetch nearby stops');
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching nearby stops:', error);
+            throw error;
         }
     },
 };

@@ -7,17 +7,14 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { RouteProp } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
+import { RouteSuggestion, PassengerType } from '../types';
 import { MaterialIcons } from '@expo/vector-icons';
-import { RouteSuggestion, PassengerType, LocationOption } from '../types';
-
-type ResultsScreenRouteProp = RouteProp<RootStackParamList, 'Results'>;
-type ResultsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Results'>;
 
 type Props = {
-  route: ResultsScreenRouteProp;
-  navigation: ResultsScreenNavigationProp;
+  route: RouteProp<RootStackParamList, 'Results'>;
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Results'>;
 };
 
 export const ResultsScreen = ({ route, navigation }: Props) => {
@@ -51,58 +48,48 @@ export const ResultsScreen = ({ route, navigation }: Props) => {
         <Text style={styles.headerTitle}>Suggested Routes</Text>
       </View>
 
-      {suggestedRoutes && suggestedRoutes.length > 0 ? (
-        suggestedRoutes.map((route) => (
-          <TouchableOpacity
-            key={route.id}
-            style={styles.routeCard}
-            onPress={() => navigation.navigate('RouteDetails', { route, passengerType })}
-          >
-            <View style={styles.routeHeader}>
-              <MaterialIcons
-                name={getTransportIcon(route.type)}
-                size={24}
-                color="#007AFF"
-              />
-              <Text style={styles.routeType}>
-                {route.type.charAt(0).toUpperCase() + route.type.slice(1)}
-              </Text>
-            </View>
-            
-            <View style={{ backgroundColor: '#FFEB3B', borderRadius: 6, paddingVertical: 4, paddingHorizontal: 10, alignSelf: 'flex-start', marginBottom: 8 }}>
-              <Text style={{ color: '#333', fontWeight: 'bold', fontSize: 15 }}>{route.routeName}</Text>
-            </View>
-            
-            <Text style={styles.routeText}>
-              {route.from.name} → {route.to.name}
+      {suggestedRoutes.map((route) => (
+        <TouchableOpacity
+          key={route.id}
+          style={styles.routeCard}
+          onPress={() => navigation.navigate('RouteDetails', { route, passengerType })}
+        >
+          <View style={styles.routeHeader}>
+            <MaterialIcons
+              name={getTransportIcon(route.type)}
+              size={24}
+              color="#007AFF"
+            />
+            <Text style={styles.routeType}>
+              {route.type.charAt(0).toUpperCase() + route.type.slice(1)}
             </Text>
-            
-            <View style={styles.routeInfoRow}>
-              <Text style={styles.fareText}>
-                ₱ {getDiscountedFare(route.fare, passengerType).toFixed(2)}
-              </Text>
-              <Text style={styles.timeText}>{Math.round(route.estimatedTime)} min</Text>
-            </View>
-
-            <View style={styles.stopsContainer}>
-              <Text style={styles.stopsTitle}>Stops:</Text>
-              {route.stops.map((stop: LocationOption, index: number) => (
-                <Text key={stop.id} style={styles.stopText}>
-                  {index + 1}. {stop.name}
-                </Text>
-              ))}
-            </View>
-          </TouchableOpacity>
-        ))
-      ) : (
-        <View style={styles.noRoutesContainer}>
-          <MaterialIcons name="error-outline" size={48} color="#666" />
-          <Text style={styles.noRoutesText}>No routes found</Text>
-          <Text style={styles.noRoutesSubtext}>
-            Try selecting different origin and destination points
+          </View>
+          
+          <View style={styles.routeNameContainer}>
+            <Text style={styles.routeName}>{route.routeName}</Text>
+          </View>
+          
+          <Text style={styles.routeText}>
+            {route.from.name} → {route.to.name}
           </Text>
-        </View>
-      )}
+          
+          <View style={styles.routeInfoRow}>
+            <Text style={styles.fareText}>
+              ₱ {getDiscountedFare(route.estimatedFare, passengerType).toFixed(2)}
+            </Text>
+            <Text style={styles.timeText}>{Math.round(route.duration)} min</Text>
+          </View>
+
+          <View style={styles.stopsContainer}>
+            <Text style={styles.stopsTitle}>Stops:</Text>
+            {route.stops.map((stop, index) => (
+              <Text key={stop.id} style={styles.stopText}>
+                {index + 1}. {stop.name}
+              </Text>
+            ))}
+          </View>
+        </TouchableOpacity>
+      ))}
     </ScrollView>
   );
 };
@@ -115,13 +102,13 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 15,
+    padding: 16,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   backButton: {
-    marginRight: 15,
+    marginRight: 16,
   },
   headerTitle: {
     fontSize: 20,
@@ -142,68 +129,59 @@ const styles = StyleSheet.create({
   routeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   routeType: {
-    marginLeft: 8,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: 'bold',
     color: '#333',
+    marginLeft: 8,
+  },
+  routeNameContainer: {
+    backgroundColor: '#FFEB3B',
+    borderRadius: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  routeName: {
+    color: '#333',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
   routeText: {
     fontSize: 16,
-    color: '#333',
-    marginBottom: 10,
+    color: '#666',
+    marginBottom: 8,
   },
   routeInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 5,
+    alignItems: 'center',
+    marginBottom: 12,
   },
   fareText: {
-    color: '#ff8800',
+    fontSize: 18,
     fontWeight: 'bold',
-    fontSize: 16,
+    color: '#007AFF',
   },
   timeText: {
-    color: '#007AFF',
-    fontWeight: 'bold',
     fontSize: 16,
+    color: '#666',
   },
   stopsContainer: {
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#eee',
+    marginTop: 8,
   },
   stopsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 5,
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
   },
   stopText: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 3,
-  },
-  noRoutesContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    marginTop: 50,
-  },
-  noRoutesText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 10,
-  },
-  noRoutesSubtext: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 5,
+    marginBottom: 4,
   },
 }); 

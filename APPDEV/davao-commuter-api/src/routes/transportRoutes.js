@@ -2,24 +2,69 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 
-// Get all routes with their stops
+// Get routes near user location
 router.get('/routes', async (req, res) => {
     try {
+        const { latitude, longitude, radius = 2 } = req.query; // radius in kilometers
+
+        if (!latitude || !longitude) {
+            // If no location provided, return all routes
+            const result = await db.query(`
+                SELECT r.id, r.name, 
+                       json_agg(
+                           json_build_object(
+                               'stop_id', s.id,
+                               'stop_name', s.name,
+                               'latitude', s.latitude,
+                               'longitude', s.longitude,
+                               'sequence', rs.sequence_number
+                           ) ORDER BY rs.sequence_number
+                       ) as stops
+                FROM routes r
+                JOIN route_stops rs ON r.id = rs.route_id
+                JOIN stops s ON rs.stop_id = s.id
+                GROUP BY r.id, r.name
+                ORDER BY r.name
+            `);
+            return res.json(result.rows);
+        }
+
+        // Find routes with stops within radius of user location
         const result = await db.query(`
-            SELECT r.id, r.name, 
+            WITH nearby_stops AS (
+                SELECT s.id, s.name, s.latitude, s.longitude,
+                       (6371 * acos(cos(radians($1)) * cos(radians(s.latitude)) * 
+                        cos(radians(s.longitude) - radians($2)) + 
+                        sin(radians($1)) * sin(radians(s.latitude)))) AS distance
+                FROM stops s
+                HAVING distance <= $3
+            )
+            SELECT DISTINCT r.id, r.name,
                    json_agg(
                        json_build_object(
                            'stop_id', s.id,
                            'stop_name', s.name,
-                           'sequence', rs.sequence_number
+                           'latitude', s.latitude,
+                           'longitude', s.longitude,
+                           'sequence', rs.sequence_number,
+                           'distance_from_user', (
+                               SELECT distance 
+                               FROM nearby_stops ns 
+                               WHERE ns.id = s.id
+                           )
                        ) ORDER BY rs.sequence_number
                    ) as stops
             FROM routes r
             JOIN route_stops rs ON r.id = rs.route_id
             JOIN stops s ON rs.stop_id = s.id
+            WHERE EXISTS (
+                SELECT 1 FROM nearby_stops ns 
+                WHERE ns.id = s.id
+            )
             GROUP BY r.id, r.name
             ORDER BY r.name
-        `);
+        `, [latitude, longitude, radius]);
+
         res.json(result.rows);
     } catch (error) {
         console.error('Error fetching routes:', error);
@@ -127,6 +172,36 @@ router.get('/routes/:routeId', async (req, res) => {
         res.json(result.rows[0]);
     } catch (error) {
         console.error('Error fetching route details:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get nearby stops
+router.get('/stops/nearby', async (req, res) => {
+    try {
+        const { latitude, longitude, radius = 1 } = req.query; // radius in kilometers
+
+        if (!latitude || !longitude) {
+            return res.status(400).json({ error: 'Latitude and longitude are required' });
+        }
+
+        const result = await db.query(`
+            SELECT 
+                s.id,
+                s.name,
+                s.latitude,
+                s.longitude,
+                (6371 * acos(cos(radians($1)) * cos(radians(s.latitude)) * 
+                 cos(radians(s.longitude) - radians($2)) + 
+                 sin(radians($1)) * sin(radians(s.latitude)))) AS distance
+            FROM stops s
+            HAVING distance <= $3
+            ORDER BY distance
+        `, [latitude, longitude, radius]);
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching nearby stops:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
