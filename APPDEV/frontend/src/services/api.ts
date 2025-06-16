@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ExpoLocation from 'expo-location';
 import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
+import { GOOGLE_MAPS_API_KEY } from '../config/maps';
 
 
 const API_URL = Platform.select({
@@ -32,7 +33,10 @@ const MOCK_DATA = {
                 { stop_id: 1, stop_name: "DXSS (Bangkal)", sequence: 1, latitude: 7.0722, longitude: 125.6131 },
                 { stop_id: 2, stop_name: "Roxas Avenue", sequence: 2, latitude: 7.0744, longitude: 125.6155 },
                 { stop_id: 3, stop_name: "SM City Davao", sequence: 3, latitude: 7.0733, longitude: 125.6144 },
-            ]
+            ],
+            jeepneyCount: 5,
+            operatingHours: "6:00 AM - 9:00 PM",
+            fare: 10
         },
         {
             id: 2,
@@ -41,7 +45,10 @@ const MOCK_DATA = {
                 { stop_id: 4, stop_name: "Matina Crossing", sequence: 1, latitude: 7.0822, longitude: 125.6231 },
                 { stop_id: 5, stop_name: "Ecoland Terminal Crossing", sequence: 2, latitude: 7.0833, longitude: 125.6244 },
                 { stop_id: 6, stop_name: "Victoria Plaza", sequence: 3, latitude: 7.0833, longitude: 125.6244 },
-            ]
+            ],
+            jeepneyCount: 4,
+            operatingHours: "5:30 AM - 10:00 PM",
+            fare: 12
         }
     ],
     stops: [
@@ -170,6 +177,7 @@ export interface Stop {
     latitude: number;
     longitude: number;
     distance?: number;
+    nextJeepneyTime?: string;
 }
 
 export interface RouteStop {
@@ -186,6 +194,9 @@ export interface Route {
     id: number;
     name: string;
     stops: RouteStop[];
+    jeepneyCount: number;
+    operatingHours: string;
+    fare: number;
 }
 
 export interface FareInfo {
@@ -246,10 +257,49 @@ export interface RouteFilter {
     preferredRoutes?: number[];
     accessibility?: boolean;
     trafficAware?: boolean;
+    walkingPreference?: 'minimal' | 'moderate' | 'preferred';
+    transferPreference?: 'minimal' | 'moderate' | 'preferred';
+    timePreference?: 'fastest' | 'balanced' | 'scenic';
+    avoidHighways?: boolean;
+    avoidTolls?: boolean;
+    wheelchairAccessible?: boolean;
+    maxTransfers?: number;
 }
 
 export interface TrafficData {
     [key: string]: number; 
+}
+
+export interface WalkingDirections {
+    coordinates: Array<{ latitude: number; longitude: number }>;
+    distance: string;
+    duration: string;
+}
+
+export interface RouteSegment {
+    type: 'walking' | 'jeepney' | 'transfer';
+    distance: number;
+    duration: number;
+    startStop?: Stop;
+    endStop?: Stop;
+    routeId?: number;
+    instructions?: string;
+}
+
+export interface EnhancedRouteSuggestion extends RouteSuggestion {
+    segments: RouteSegment[];
+    totalWalkingDistance: number;
+    totalJeepneyDistance: number;
+    transferCount: number;
+    reliability: number; // 0-1 score based on historical data
+    crowdedness: number; // 0-1 score based on time of day
+    safety: number; // 0-1 score based on historical data
+    accessibility: {
+        wheelchair: boolean;
+        elevator: boolean;
+        escalator: boolean;
+        stairs: boolean;
+    };
 }
 
 const handleError = (error: unknown, context: string): never => {
@@ -555,82 +605,109 @@ const api = {
         filters?: RouteFilter
     ): Promise<RouteSuggestion[]> => {
         try {
-            console.log('Using mock route suggestions');
+            // Get all stops
+            const stops = await api.getStops();
             
-            // For testing, we'll use our mock data directly
-            const routes = MOCK_DATA.routes;
+            // Find nearest stops using Google Maps Distance Matrix API
+            const nearestStops = await Promise.all(
+                stops.map(async (stop) => {
+                    const response = await axios.get(
+                        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${originLocation.latitude},${originLocation.longitude}&destinations=${stop.latitude},${stop.longitude}&mode=walking&key=${GOOGLE_MAPS_API_KEY}`
+                    );
+                    
+                    return {
+                        stop,
+                        distance: response.data.rows[0].elements[0].distance.value,
+                        duration: response.data.rows[0].elements[0].duration.value
+                    };
+                })
+            );
+
+            // Sort stops by distance
+            const sortedStops = nearestStops.sort((a, b) => a.distance - b.distance);
+            const nearestOriginStops = sortedStops.slice(0, 3); // Get 3 nearest stops
+
+            // Do the same for destination
+            const destinationStops = await Promise.all(
+                stops.map(async (stop) => {
+                    const response = await axios.get(
+                        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${destinationLocation.latitude},${destinationLocation.longitude}&destinations=${stop.latitude},${stop.longitude}&mode=walking&key=${GOOGLE_MAPS_API_KEY}`
+                    );
+                    
+                    return {
+                        stop,
+                        distance: response.data.rows[0].elements[0].distance.value,
+                        duration: response.data.rows[0].elements[0].duration.value
+                    };
+                })
+            );
+
+            const sortedDestStops = destinationStops.sort((a, b) => a.distance - b.distance);
+            const nearestDestStops = sortedDestStops.slice(0, 3); // Get 3 nearest stops
+
+            // Get all routes
+            const routes = await api.getRoutes();
             const suggestions: RouteSuggestion[] = [];
 
-            // Find the nearest stops from our mock data
-            const originStops = MOCK_DATA.stops.map(stop => ({
-                stop,
-                distance: calculateDistance(
-                    originLocation.latitude,
-                    originLocation.longitude,
-                    stop.latitude,
-                    stop.longitude
-                )
-            })).sort((a, b) => a.distance - b.distance);
-
-            const destinationStops = MOCK_DATA.stops.map(stop => ({
-                stop,
-                distance: calculateDistance(
-                    destinationLocation.latitude,
-                    destinationLocation.longitude,
-                    stop.latitude,
-                    stop.longitude
-                )
-            })).sort((a, b) => a.distance - b.distance);
-
-            // Get the nearest origin and destination stops
-            const nearestOrigin = originStops[0];
-            const nearestDest = destinationStops[0];
-
-            if (!nearestOrigin || !nearestDest) {
-                throw new Error('No stops found near the selected locations');
-            }
-
-            // Find routes that contain both stops
-            for (const route of routes) {
-                const originStopIndex = route.stops.findIndex(
-                    stop => stop.stop_id === nearestOrigin.stop.id
-                );
-                const destinationStopIndex = route.stops.findIndex(
-                    stop => stop.stop_id === nearestDest.stop.id
-                );
-
-                if (originStopIndex !== -1 && destinationStopIndex !== -1 && originStopIndex < destinationStopIndex) {
-                    // Calculate total distance
-                    let totalDistance = 0;
-                    for (let i = originStopIndex; i < destinationStopIndex; i++) {
-                        const nextStop = route.stops[i + 1];
-                        totalDistance += calculateDistance(
-                            route.stops[i].latitude,
-                            route.stops[i].longitude,
-                            nextStop.latitude,
-                            nextStop.longitude
-                        );
-                    }
-
-                    // Calculate duration (assuming average speed of 20 km/h)
-                    const duration = (totalDistance / 1000) / 20 * 60; // in minutes
-
-                    // Calculate fare (₱10 base + ₱2 per km)
-                    const fare = Math.ceil(10 + ((totalDistance / 1000) * 2));
-
-                    suggestions.push({
-                        route,
-                        originStop: route.stops[originStopIndex],
-                        destinationStop: route.stops[destinationStopIndex],
-                        estimatedFare: fare,
-                        distance: totalDistance,
-                        duration: duration,
-                        accessibilityScore: 1,
-                        trafficLevel: null
+            // For each origin-destination stop pair, find possible routes
+            for (const originStop of nearestOriginStops) {
+                for (const destStop of nearestDestStops) {
+                    // Find routes that contain both stops
+                    const validRoutes = routes.filter(route => {
+                        const originIndex = route.stops.findIndex(s => s.stop_id === originStop.stop.id);
+                        const destIndex = route.stops.findIndex(s => s.stop_id === destStop.stop.id);
+                        return originIndex !== -1 && destIndex !== -1 && originIndex < destIndex;
                     });
+
+                    for (const route of validRoutes) {
+                        const originIndex = route.stops.findIndex(s => s.stop_id === originStop.stop.id);
+                        const destIndex = route.stops.findIndex(s => s.stop_id === destStop.stop.id);
+
+                        // Get detailed route from Google Maps
+                        const response = await axios.get(
+                            `https://maps.googleapis.com/maps/api/directions/json?origin=${originStop.stop.latitude},${originStop.stop.longitude}&destination=${destStop.stop.latitude},${destStop.stop.longitude}&mode=transit&key=${GOOGLE_MAPS_API_KEY}`
+                        );
+
+                        if (response.data.routes.length > 0) {
+                            const googleRoute = response.data.routes[0];
+                            const leg = googleRoute.legs[0];
+
+                            // Calculate total distance including walking to/from stops
+                            const totalDistance = originStop.distance + leg.distance.value + destStop.distance;
+                            const totalDuration = originStop.duration + leg.duration.value + destStop.duration;
+
+                            // Calculate fare based on distance
+                            const fare = Math.ceil(10 + ((totalDistance / 1000) * 2));
+
+                            // Get traffic data if available
+                            let trafficLevel = null;
+                            try {
+                                const trafficResponse = await axios.get(
+                                    `https://maps.googleapis.com/maps/api/directions/json?origin=${originStop.stop.latitude},${originStop.stop.longitude}&destination=${destStop.stop.latitude},${destStop.stop.longitude}&departure_time=now&traffic_model=best_guess&key=${GOOGLE_MAPS_API_KEY}`
+                                );
+                                if (trafficResponse.data.routes[0].legs[0].duration_in_traffic) {
+                                    trafficLevel = trafficResponse.data.routes[0].legs[0].duration_in_traffic.value / leg.duration.value;
+                                }
+                            } catch (error) {
+                                console.error('Error getting traffic data:', error);
+                            }
+
+                            suggestions.push({
+                                route,
+                                originStop: route.stops[originIndex],
+                                destinationStop: route.stops[destIndex],
+                                estimatedFare: fare,
+                                distance: totalDistance,
+                                duration: totalDuration / 60, // Convert to minutes
+                                accessibilityScore: 1,
+                                trafficLevel
+                            });
+                        }
+                    }
                 }
             }
 
+            // Sort suggestions by total duration
             return suggestions.sort((a, b) => a.duration - b.duration);
         } catch (error) {
             console.error('Error getting route suggestions:', error);
@@ -648,14 +725,16 @@ const api = {
         const minLng = Math.min(...longitudes);
         const maxLng = Math.max(...longitudes);
 
-        const latitudeDelta = (maxLat - minLat) * 1.5; 
-        const longitudeDelta = (maxLng - minLng) * 1.5;
+        const centerLat = (minLat + maxLat) / 2;
+        const centerLng = (minLng + maxLng) / 2;
+        const latDelta = (maxLat - minLat) * 1.5;
+        const lngDelta = (maxLng - minLng) * 1.5;
 
         return {
-            latitude: (minLat + maxLat) / 2,
-            longitude: (minLng + maxLng) / 2,
-            latitudeDelta,
-            longitudeDelta,
+            latitude: centerLat,
+            longitude: centerLng,
+            latitudeDelta: Math.max(latDelta, 0.01),
+            longitudeDelta: Math.max(lngDelta, 0.01),
         };
     },
 
@@ -763,6 +842,164 @@ const api = {
             throw error;
         }
     },
+
+    getWalkingDirections: async (origin: { latitude: number; longitude: number }, destination: { latitude: number; longitude: number }): Promise<WalkingDirections> => {
+        try {
+            const response = await axios.get(
+                `https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&mode=walking&key=${GOOGLE_MAPS_API_KEY}`
+            );
+
+            if (response.data.routes.length === 0) {
+                throw new Error('No route found');
+            }
+
+            const route = response.data.routes[0];
+            const leg = route.legs[0];
+            const coordinates = decodePolyline(route.overview_polyline.points);
+
+            return {
+                coordinates,
+                distance: leg.distance.text,
+                duration: leg.duration.text,
+            };
+        } catch (error) {
+            console.error('Error getting walking directions:', error);
+            throw error;
+        }
+    },
+};
+
+// Helper function to decode Google's polyline format
+function decodePolyline(encoded: string): Array<{ latitude: number; longitude: number }> {
+    const poly: Array<{ latitude: number; longitude: number }> = [];
+    let index = 0;
+    let lat = 0;
+    let lng = 0;
+
+    while (index < encoded.length) {
+        let shift = 0;
+        let result = 0;
+
+        do {
+            let b = encoded.charCodeAt(index++) - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (result >= 0x20);
+
+        const dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+        lat += dlat;
+
+        shift = 0;
+        result = 0;
+
+        do {
+            let b = encoded.charCodeAt(index++) - 63;
+            result |= (b & 0x1f) << shift;
+            shift += 5;
+        } while (result >= 0x20);
+
+        const dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+        lng += dlng;
+
+        poly.push({
+            latitude: lat * 1e-5,
+            longitude: lng * 1e-5,
+        });
+    }
+
+    return poly;
+}
+
+// Helper functions for enhanced features
+const calculateReliability = (routeId: number): number => {
+    // Implement reliability calculation based on historical data
+    return 0.8; // Placeholder
+};
+
+const calculateCrowdedness = (time: Date): number => {
+    const hour = time.getHours();
+    if (hour >= 7 && hour <= 9) return 0.9; // Morning rush
+    if (hour >= 17 && hour <= 19) return 0.9; // Evening rush
+    if (hour >= 11 && hour <= 14) return 0.7; // Lunch time
+    return 0.4; // Off-peak
+};
+
+const calculateSafetyScore = (routeId: number): number => {
+    // Implement safety score calculation based on historical data
+    return 0.85; // Placeholder
+};
+
+const checkAccessibility = async (routeId: number) => {
+    // Implement accessibility check
+    return {
+        wheelchair: true,
+        elevator: false,
+        escalator: false,
+        stairs: true
+    };
+};
+
+const calculateAccessibilityScore = (accessibility: any): number => {
+    let score = 0;
+    if (accessibility.wheelchair) score += 0.4;
+    if (accessibility.elevator) score += 0.3;
+    if (accessibility.escalator) score += 0.2;
+    if (accessibility.stairs) score += 0.1;
+    return score;
+};
+
+const calculateTrafficLevel = (trafficData: TrafficData): number => {
+    // Implement traffic level calculation
+    return 0.5; // Placeholder
+};
+
+const calculateFare = (distance: number): number => {
+    return Math.ceil(10 + ((distance / 1000) * 2));
+};
+
+const calculateTotalDuration = (segments: RouteSegment[]): number => {
+    return segments.reduce((total, segment) => total + segment.duration, 0) / 60; // Convert to minutes
+};
+
+const sortSuggestions = (suggestions: EnhancedRouteSuggestion[], filters?: RouteFilter): EnhancedRouteSuggestion[] => {
+    if (!filters) return suggestions.sort((a, b) => a.duration - b.duration);
+
+    return suggestions.sort((a, b) => {
+        let scoreA = 0;
+        let scoreB = 0;
+
+        // Duration preference
+        if (filters.timePreference === 'fastest') {
+            scoreA -= a.duration;
+            scoreB -= b.duration;
+        }
+
+        // Walking preference
+        if (filters.walkingPreference === 'minimal') {
+            scoreA -= a.totalWalkingDistance;
+            scoreB -= b.totalWalkingDistance;
+        }
+
+        // Transfer preference
+        if (filters.transferPreference === 'minimal') {
+            scoreA -= a.transferCount * 1000;
+            scoreB -= b.transferCount * 1000;
+        }
+
+        // Traffic awareness
+        if (filters.trafficAware) {
+            scoreA -= (a.trafficLevel || 0) * 1000;
+            scoreB -= (b.trafficLevel || 0) * 1000;
+        }
+
+        // Accessibility
+        if (filters.accessibility) {
+            scoreA += (a.accessibilityScore || 0) * 1000;
+            scoreB += (b.accessibilityScore || 0) * 1000;
+        }
+
+        return scoreB - scoreA;
+    });
 };
 
 export default api;

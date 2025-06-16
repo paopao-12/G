@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE, Callout, Region } from 'react-native-maps';
 import api, { Route, JeepneyLocation, MapRegion, TrafficData } from '../services/api';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 interface RouteMapProps {
     route: Route;
@@ -30,6 +30,9 @@ const RouteMap: React.FC<RouteMapProps> = ({
     const [selectedStop, setSelectedStop] = useState<StopInfo | null>(null);
     const [loading, setLoading] = useState(true);
     const [trafficData, setTrafficData] = useState<TrafficData>({});
+    const [walkingDirections, setWalkingDirections] = useState<any[]>([]);
+    const [showStreetView, setShowStreetView] = useState(false);
+    const [streetViewLocation, setStreetViewLocation] = useState<{lat: number, lng: number} | null>(null);
     const mapRef = useRef<MapView>(null);
 
     useEffect(() => {
@@ -39,21 +42,17 @@ const RouteMap: React.FC<RouteMapProps> = ({
     const initializeMap = async () => {
         try {
             setLoading(true);
-            // Get initial map region
             const region = api.getRouteMapRegion(route);
             setMapRegion(region);
 
-            // Get initial jeepney locations
             if (showJeepneyLocations) {
                 await loadJeepneyLocations();
             }
 
-            // Get traffic data
             if (showTraffic) {
                 await loadTrafficData();
             }
 
-            // Subscribe to real-time updates
             if (showJeepneyLocations) {
                 const unsubscribe = api.subscribeToJeepneyUpdates(
                     route.id,
@@ -96,51 +95,27 @@ const RouteMap: React.FC<RouteMapProps> = ({
         }
     };
 
-    const updateStopInfo = (locations: JeepneyLocation[]) => {
-        // Update stop information based on jeepney locations
-        const stopInfo: { [key: string]: StopInfo } = {};
-        
-        route.stops.forEach(stop => {
-            stopInfo[stop.stop_id.toString()] = {
-                name: stop.stop_name,
-                passengerCount: 0,
-            };
-        });
-
-        locations.forEach(jeepney => {
-            if (jeepney.currentStop) {
-                const stopId = jeepney.currentStop.stop_id.toString();
-                if (stopInfo[stopId]) {
-                    stopInfo[stopId].passengerCount = (stopInfo[stopId].passengerCount || 0) + 1;
-                }
-            }
-            if (jeepney.nextStop && jeepney.estimatedArrival) {
-                const stopId = jeepney.nextStop.stop_id.toString();
-                if (stopInfo[stopId]) {
-                    stopInfo[stopId].nextJeepneyArrival = jeepney.estimatedArrival;
-                }
-            }
-        });
-
-        if (selectedStop) {
-            const updatedStop = stopInfo[selectedStop.name];
-            if (updatedStop) {
-                setSelectedStop(updatedStop);
-            }
+    const getWalkingDirections = async (stop: Stop) => {
+        try {
+            const directions = await api.getWalkingDirections(
+                { latitude: userLocation?.coords.latitude || 0, longitude: userLocation?.coords.longitude || 0 },
+                { latitude: stop.latitude, longitude: stop.longitude }
+            );
+            setWalkingDirections(directions);
+        } catch (error) {
+            console.error('Error getting walking directions:', error);
         }
     };
 
-    const getJeepneyIcon = (status: JeepneyLocation['status']) => {
-        switch (status) {
-            case 'active':
-                return '🚐';
-            case 'inactive':
-                return '⛔';
-            case 'maintenance':
-                return '🔧';
-            default:
-                return '🚐';
-        }
+    const handleStopPress = (stop: Stop) => {
+        setSelectedStop(stop);
+        getWalkingDirections(stop);
+        onStopPress?.(stop.id);
+    };
+
+    const toggleStreetView = (stop: Stop) => {
+        setStreetViewLocation({ lat: stop.latitude, lng: stop.longitude });
+        setShowStreetView(true);
     };
 
     const getTrafficColor = (congestion: number) => {
@@ -172,6 +147,7 @@ const RouteMap: React.FC<RouteMapProps> = ({
                 showsScale
                 showsBuildings
                 showsIndoors
+                mapType="standard"
             >
                 {/* Route path with traffic data */}
                 {route.stops.map((stop, index) => {
@@ -196,81 +172,92 @@ const RouteMap: React.FC<RouteMapProps> = ({
                     return null;
                 })}
 
-                {/* Stops */}
+                {/* Walking Directions */}
+                {walkingDirections.length > 0 && (
+                    <Polyline
+                        coordinates={walkingDirections}
+                        strokeColor="#007AFF"
+                        strokeWidth={3}
+                        lineDashPattern={[1]}
+                    />
+                )}
+
+                {/* Stops with enhanced markers */}
                 {route.stops.map((stop, index) => (
                     <Marker
-                        key={stop.stop_id}
+                        key={stop.id}
                         coordinate={{
                             latitude: stop.latitude,
                             longitude: stop.longitude,
                         }}
-                        onPress={() => {
-                            const stopInfo = {
-                                name: stop.stop_name,
-                                nextJeepneyArrival: undefined,
-                                passengerCount: 0,
-                            };
-                            setSelectedStop(stopInfo);
-                            onStopPress?.(stop.stop_id);
-                        }}
+                        title={stop.name}
+                        onPress={() => handleStopPress(stop)}
                     >
-                        <View style={styles.stopMarker}>
-                            <Text style={styles.stopNumber}>{index + 1}</Text>
-                        </View>
                         <Callout>
-                            <View style={styles.calloutContainer}>
-                                <Text style={styles.calloutTitle}>{stop.stop_name}</Text>
-                                {selectedStop?.nextJeepneyArrival && (
-                                    <Text style={styles.calloutText}>
-                                        Next jeepney: {selectedStop.nextJeepneyArrival.toLocaleTimeString()}
-                                    </Text>
-                                )}
-                                {selectedStop?.passengerCount !== undefined && (
-                                    <Text style={styles.calloutText}>
-                                        Waiting passengers: {selectedStop.passengerCount}
-                                    </Text>
-                                )}
+                            <View style={styles.callout}>
+                                <Text style={styles.calloutTitle}>{stop.name}</Text>
+                                <Text style={styles.calloutText}>
+                                    Next jeepney: {stop.nextJeepneyTime || 'No data'}
+                                </Text>
+                                <TouchableOpacity
+                                    style={styles.streetViewButton}
+                                    onPress={() => toggleStreetView(stop)}
+                                >
+                                    <Text style={styles.streetViewButtonText}>View Street</Text>
+                                </TouchableOpacity>
                             </View>
                         </Callout>
                     </Marker>
                 ))}
 
                 {/* Jeepney locations */}
-                {showJeepneyLocations && jeepneyLocations.map(jeepney => (
+                {showJeepneyLocations && jeepneyLocations.map((jeepney) => (
                     <Marker
                         key={jeepney.id}
                         coordinate={{
                             latitude: jeepney.latitude,
                             longitude: jeepney.longitude,
                         }}
-                        rotation={jeepney.heading}
+                        title={`Jeepney ${jeepney.id}`}
+                        description={`Status: ${jeepney.status}`}
                     >
                         <View style={styles.jeepneyMarker}>
-                            <Text style={styles.jeepneyIcon}>
-                                {getJeepneyIcon(jeepney.status)}
-                            </Text>
+                            <MaterialIcons name="directions-bus" size={24} color="#007AFF" />
                         </View>
-                        <Callout>
-                            <View style={styles.calloutContainer}>
-                                <Text style={styles.calloutTitle}>Jeepney {jeepney.id}</Text>
-                                <Text style={styles.calloutText}>Status: {jeepney.status}</Text>
-                                {jeepney.nextStop && (
-                                    <Text style={styles.calloutText}>
-                                        Next stop: {jeepney.nextStop.stop_name}
-                                    </Text>
-                                )}
-                                {jeepney.estimatedArrival && (
-                                    <Text style={styles.calloutText}>
-                                        ETA: {jeepney.estimatedArrival.toLocaleTimeString()}
-                                    </Text>
-                                )}
-                            </View>
-                        </Callout>
                     </Marker>
                 ))}
             </MapView>
 
-            {/* Control buttons */}
+            {/* Street View Modal */}
+            <Modal
+                visible={showStreetView}
+                animationType="slide"
+                onRequestClose={() => setShowStreetView(false)}
+            >
+                <View style={styles.streetViewContainer}>
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={() => setShowStreetView(false)}
+                    >
+                        <MaterialIcons name="close" size={24} color="#000" />
+                    </TouchableOpacity>
+                    {streetViewLocation && (
+                        <MapView
+                            style={styles.streetView}
+                            provider={PROVIDER_GOOGLE}
+                            initialRegion={{
+                                latitude: streetViewLocation.lat,
+                                longitude: streetViewLocation.lng,
+                                latitudeDelta: 0.01,
+                                longitudeDelta: 0.01,
+                            }}
+                            mapType="streetview"
+                        />
+                    )}
+                </View>
+            </Modal>
+
+            {/* Controls */}
             <View style={styles.controlsContainer}>
                 <TouchableOpacity
                     style={styles.controlButton}
@@ -318,56 +305,66 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     map: {
-        flex: 1,
+        ...StyleSheet.absoluteFillObject,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
     },
     loadingText: {
         marginTop: 10,
         fontSize: 16,
         color: '#666',
     },
-    stopMarker: {
-        backgroundColor: '#fff',
-        padding: 5,
-        borderRadius: 20,
-        borderWidth: 2,
-        borderColor: '#000',
-    },
-    stopNumber: {
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-    jeepneyMarker: {
-        backgroundColor: 'transparent',
-    },
-    jeepneyIcon: {
-        fontSize: 24,
-    },
     controlsContainer: {
         position: 'absolute',
-        top: 10,
-        right: 10,
-        backgroundColor: '#fff',
-        borderRadius: 5,
-        elevation: 3,
+        top: 20,
+        right: 20,
+        backgroundColor: 'white',
+        borderRadius: 8,
+        padding: 8,
+        elevation: 4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
     },
     controlButton: {
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
+        padding: 8,
+        marginVertical: 4,
     },
-    calloutContainer: {
+    legendContainer: {
+        position: 'absolute',
+        bottom: 20,
+        left: 20,
+        backgroundColor: 'white',
+        borderRadius: 8,
+        padding: 8,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    legendItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 4,
+    },
+    legendColor: {
+        width: 20,
+        height: 20,
+        borderRadius: 4,
+        marginRight: 8,
+    },
+    legendText: {
+        fontSize: 12,
+        color: '#666',
+    },
+    callout: {
+        width: 200,
         padding: 10,
-        minWidth: 150,
     },
     calloutTitle: {
         fontSize: 16,
@@ -377,35 +374,45 @@ const styles = StyleSheet.create({
     calloutText: {
         fontSize: 14,
         color: '#666',
-        marginBottom: 3,
+        marginBottom: 5,
     },
-    legendContainer: {
+    streetViewButton: {
+        backgroundColor: '#007AFF',
+        padding: 8,
+        borderRadius: 4,
+        marginTop: 5,
+    },
+    streetViewButtonText: {
+        color: 'white',
+        textAlign: 'center',
+        fontSize: 12,
+    },
+    jeepneyMarker: {
+        backgroundColor: 'white',
+        borderRadius: 20,
+        padding: 4,
+        borderWidth: 2,
+        borderColor: '#007AFF',
+    },
+    streetViewContainer: {
+        flex: 1,
+    },
+    streetView: {
+        flex: 1,
+    },
+    closeButton: {
         position: 'absolute',
-        bottom: 20,
-        left: 10,
-        backgroundColor: '#fff',
-        padding: 10,
-        borderRadius: 5,
-        elevation: 3,
+        top: 40,
+        right: 20,
+        zIndex: 1,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        padding: 8,
+        elevation: 4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
-    },
-    legendItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 5,
-    },
-    legendColor: {
-        width: 20,
-        height: 20,
-        marginRight: 5,
-        borderRadius: 3,
-    },
-    legendText: {
-        fontSize: 12,
-        color: '#666',
     },
 });
 
