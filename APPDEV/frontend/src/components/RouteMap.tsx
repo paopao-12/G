@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import MapboxGL from '@rnmapbox/maps';
+import MapView, { Polyline, Marker } from 'react-native-maps';
 import api, { Route, RouteStop, FareInfo } from '../services/api';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
@@ -22,7 +22,7 @@ const RouteMap: React.FC<RouteMapProps> = ({
     const [fareInfo, setFareInfo] = useState<FareInfo | null>(null);
     const [loading, setLoading] = useState(true);
     const [mapRegion, setMapRegion] = useState<{ latitude: number; longitude: number } | null>(null);
-    const mapRef = useRef<MapboxGL.MapView>(null);
+    const mapRef = useRef<MapView>(null);
 
     // Assign a color to each route
     const ROUTE_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A5A5', '#9B59B6', '#3498DB', '#E67E22', '#2ECC71'];
@@ -76,48 +76,32 @@ const RouteMap: React.FC<RouteMapProps> = ({
 
     return (
         <View style={styles.container}>
-            <MapboxGL.MapView
+            <MapView
                 ref={mapRef}
                 style={styles.map}
-                styleURL={MapboxGL.StyleURL.Street}
+                initialRegion={mapRegion ? {
+                    latitude: mapRegion.latitude,
+                    longitude: mapRegion.longitude,
+                    latitudeDelta: 0.05,
+                    longitudeDelta: 0.05,
+                } : undefined}
+                showsUserLocation={true}
             >
-                {mapRegion && (
-                    <MapboxGL.Camera
-                        centerCoordinate={[mapRegion.longitude, mapRegion.latitude]}
-                        zoomLevel={13}
-                    />
-                )}
                 {/* Render all routes as color-coded polylines */}
                 {routes.map((route, idx) => (
-                    <MapboxGL.ShapeSource
-                        id={`route-shape-${route.id}`}
-                        key={`route-shape-${route.id}`}
-                        shape={{
-                            type: 'Feature',
-                            geometry: {
-                                type: 'LineString',
-                                coordinates: route.stops.map(stop => [stop.longitude, stop.latitude]),
-                            },
-                        } as any}
-                    >
-                        <MapboxGL.LineLayer
-                            id={`route-line-${route.id}`}
-                            style={{
-                                lineColor: ROUTE_COLORS[idx % ROUTE_COLORS.length],
-                                lineWidth: 4,
-                                lineCap: 'round',
-                                lineJoin: 'round',
-                            }}
-                        />
-                    </MapboxGL.ShapeSource>
+                    <Polyline
+                        key={`route-polyline-${route.id}`}
+                        coordinates={route.stops.map(stop => ({ latitude: stop.latitude, longitude: stop.longitude }))}
+                        strokeColor={ROUTE_COLORS[idx % ROUTE_COLORS.length]}
+                        strokeWidth={4}
+                    />
                 ))}
                 {/* Render stops for all routes */}
                 {routes.map((route) => route.stops.map((stop) => (
-                    <MapboxGL.PointAnnotation
+                    <Marker
                         key={`stop-${route.id}-${stop.stop_id}`}
-                        id={`stop-${route.id}-${stop.stop_id}`}
-                        coordinate={[stop.longitude, stop.latitude]}
-                        onSelected={() => handleStopPress(stop)}
+                        coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
+                        onPress={() => handleStopPress(stop)}
                     >
                         <View style={
                             selectedOrigin?.stop_id === stop.stop_id
@@ -128,9 +112,9 @@ const RouteMap: React.FC<RouteMapProps> = ({
                         }>
                             <Text style={styles.stopMarkerText}>{stop.stop_name[0]}</Text>
                         </View>
-                    </MapboxGL.PointAnnotation>
+                    </Marker>
                 )))}
-            </MapboxGL.MapView>
+            </MapView>
             {/* Fare display */}
             <View style={styles.fareContainer}>
                 <Text style={styles.fareLabel}>Origin: {selectedOrigin ? selectedOrigin.stop_name : 'Tap a stop'}</Text>

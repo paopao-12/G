@@ -13,7 +13,10 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyCr_EFHO0mW2q9hpwIx6jbyhiUoEK6O1w8"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +24,12 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.DavaoCommuterGuideNew"
+      "package": "com.anonymous.DavaoCommuterGuideNew",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCr_EFHO0mW2q9hpwIx6jbyhiUoEK6O1w8"
+        }
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator, ScrollView, Modal, Alert } from 'react-native';
-import MapboxGL from '@rnmapbox/maps';
-import Geolocation from '@react-native-community/geolocation';
+import MapView, { Marker, Polyline } from 'react-native-maps';
+import * as Location from 'expo-location';
 import api, { Route, Stop, FareInfo } from '../services/api';
 import { MaterialIcons, Ionicons } from '@expo/vector-icons';
 import { BUS_STOPS } from '../busStops';
@@ -26,7 +26,7 @@ const NearbyMap: React.FC<NearbyMapProps> = ({ onStopSelect, onRouteSelect }) =>
     const [showRoutePanel, setShowRoutePanel] = useState(false);
     const [selectedRoutes, setSelectedRoutes] = useState<number[]>([]);
     const [routeColors, setRouteColors] = useState<{[key: number]: string}>({});
-    const mapRef = useRef<MapboxGL.MapView>(null);
+    const mapRef = useRef<MapView>(null);
     const [cameraCenter, setCameraCenter] = useState<[number, number] | null>(null);
     const [selectedOrigin, setSelectedOrigin] = useState<Stop | null>(null);
     const [selectedDestination, setSelectedDestination] = useState<Stop | null>(null);
@@ -34,33 +34,36 @@ const NearbyMap: React.FC<NearbyMapProps> = ({ onStopSelect, onRouteSelect }) =>
 
     useEffect(() => {
         setLoading(true);
-        Geolocation.getCurrentPosition(
-            position => {
-                const { latitude, longitude } = position.coords;
-                setUserLocation([longitude, latitude]);
-                Promise.all([
-                    api.getNearbyStops(latitude, longitude),
-                    api.getRoutes(latitude, longitude)
-                ]).then(([stops, routes]) => {
-                    setNearbyStops(stops);
-                    setNearbyRoutes(routes);
-                    const colors: {[key: number]: string} = {};
-                    routes.forEach((route, index) => {
-                        colors[route.id] = ROUTE_COLORS[index % ROUTE_COLORS.length];
-                    });
-                    setRouteColors(colors);
-                    setSelectedRoutes(routes.map(route => route.id));
-                }).catch(err => {
-                    console.error('Error loading data:', err);
-                    setError('Error loading data. Please try again.');
-                }).finally(() => setLoading(false));
-            },
-            error => {
+        (async () => {
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
                 setError('Location permission denied or unavailable');
                 setLoading(false);
-            },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-        );
+                return;
+            }
+            let position = await Location.getCurrentPositionAsync({});
+            const { latitude, longitude } = position.coords;
+            setUserLocation([longitude, latitude]);
+            try {
+                const [stops, routes] = await Promise.all([
+                    api.getNearbyStops(latitude, longitude),
+                    api.getRoutes(latitude, longitude)
+                ]);
+                setNearbyStops(stops);
+                setNearbyRoutes(routes);
+                const colors: {[key: number]: string} = {};
+                routes.forEach((route, index) => {
+                    colors[route.id] = ROUTE_COLORS[index % ROUTE_COLORS.length];
+                });
+                setRouteColors(colors);
+                setSelectedRoutes(routes.map(route => route.id));
+            } catch (err) {
+                console.error('Error loading data:', err);
+                setError('Error loading data. Please try again.');
+            } finally {
+                setLoading(false);
+            }
+        })();
     }, []);
 
     const toggleRoute = (routeId: number) => {
@@ -144,28 +147,18 @@ const NearbyMap: React.FC<NearbyMapProps> = ({ onStopSelect, onRouteSelect }) =>
 
     return (
         <View style={styles.container}>
-            <MapboxGL.MapView
+            <MapView
                 ref={mapRef}
                 style={styles.map}
-                styleURL={MapboxGL.StyleURL.Street}
+                initialRegion={userLocation ? {
+                    latitude: userLocation[1],
+                    longitude: userLocation[0],
+                    latitudeDelta: 0.05,
+                    longitudeDelta: 0.05,
+                } : undefined}
+                showsUserLocation={true}
             >
-                {(cameraCenter || userLocation) && (
-                    <MapboxGL.Camera
-                        centerCoordinate={cameraCenter || userLocation}
-                        zoomLevel={13}
-                    />
-                )}
-                {/* User location marker */}
-                {userLocation && (
-                    <MapboxGL.PointAnnotation
-                        id="user-location"
-                        coordinate={userLocation}
-                    >
-                        <View style={{backgroundColor:'#007AFF',borderRadius:10,padding:4}}>
-                            <MaterialIcons name="person-pin-circle" size={24} color="#fff" />
-                        </View>
-                    </MapboxGL.PointAnnotation>
-                )}
+                {/* User location marker (optional, since showsUserLocation is true) */}
                 {/* Nearby stops markers (selectable) */}
                 {nearbyStops.map((stop) => {
                     let markerStyle = styles.callout;
@@ -175,11 +168,10 @@ const NearbyMap: React.FC<NearbyMapProps> = ({ onStopSelect, onRouteSelect }) =>
                         markerStyle = { ...styles.callout, ...styles.destinationMarker };
                     }
                     return (
-                        <MapboxGL.PointAnnotation
+                        <Marker
                             key={`stop-${stop.id}`}
-                            id={`stop-${stop.id}`}
-                            coordinate={[stop.longitude, stop.latitude]}
-                            onSelected={() => handleStopPress(stop)}
+                            coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
+                            onPress={() => handleStopPress(stop)}
                         >
                             <View style={markerStyle}>
                                 <Text style={styles.calloutTitle}>{stop.name}</Text>
@@ -187,46 +179,32 @@ const NearbyMap: React.FC<NearbyMapProps> = ({ onStopSelect, onRouteSelect }) =>
                                     Distance: {(stop.distance ?? 0).toFixed(1)} km
                                 </Text>
                             </View>
-                        </MapboxGL.PointAnnotation>
+                        </Marker>
                     );
                 })}
                 {/* All Davao bus stops markers (from BUS_STOPS) */}
                 {BUS_STOPS.map((stop, idx) => (
-                    <MapboxGL.PointAnnotation
+                    <Marker
                         key={`busstop-${idx}`}
-                        id={`busstop-${idx}`}
-                        coordinate={[stop.longitude, stop.latitude]}
+                        coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
                     >
                         <View style={{backgroundColor:'#0a662e',borderRadius:8,padding:4}}>
                             <Text style={{color:'#fff',fontWeight:'bold',fontSize:10}}>{stop.name}</Text>
                         </View>
-                    </MapboxGL.PointAnnotation>
+                    </Marker>
                 ))}
                 {/* Route polylines */}
                 {nearbyRoutes
                     .filter(route => selectedRoutes.includes(route.id))
                     .map((route) => (
-                        <MapboxGL.ShapeSource
-                            id={`route-shape-${route.id}`}
-                            key={`route-shape-${route.id}`}
-                            shape={{
-                                type: 'Feature',
-                                geometry: {
-                                    type: 'LineString',
-                                    coordinates: route.stops.map((stop) => [stop.longitude, stop.latitude]),
-                                },
-                            } as any}
-                        >
-                            <MapboxGL.LineLayer
-                                id={`route-line-${route.id}`}
-                                style={{
-                                    lineColor: routeColors[route.id] || '#FF6B6B',
-                                    lineWidth: 4,
-                                }}
-                            />
-                        </MapboxGL.ShapeSource>
+                        <Polyline
+                            key={`route-polyline-${route.id}`}
+                            coordinates={route.stops.map((stop) => ({ latitude: stop.latitude, longitude: stop.longitude }))}
+                            strokeColor={routeColors[route.id] || '#FF6B6B'}
+                            strokeWidth={4}
+                        />
                     ))}
-            </MapboxGL.MapView>
+            </MapView>
             {/* Fare display */}
             <View style={styles.fareContainer}>
                 <Text style={styles.fareLabel}>Origin: {selectedOrigin ? selectedOrigin.name : 'Tap a stop'}</Text>

@@ -13,7 +13,7 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import api, { FareInfo } from '../services/api';
-import MapboxGL from '@rnmapbox/maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import { RootStackParamList } from '../types/navigation';
 import { MaterialIcons } from '@expo/vector-icons';
 
@@ -90,27 +90,24 @@ const RouteDetailsScreen = () => {
         <Text style={styles.routeName}>{route.routeName}</Text>
       </View>
       <View style={styles.mapContainer}>
-        <MapboxGL.MapView
+        <MapView
           style={styles.map}
-          styleURL={MapboxGL.StyleURL.Street}
-          logoEnabled={false}
-          compassEnabled
-          scaleBarEnabled
+          initialRegion={coordinates.length > 0 ? {
+            latitude: coordinates[0].latitude,
+            longitude: coordinates[0].longitude,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          } : undefined}
         >
-          <MapboxGL.Camera
-            centerCoordinate={coordinates.length > 0 ? [coordinates[0].longitude, coordinates[0].latitude] : [125.6, 7.07]}
-            zoomLevel={13}
-          />
           {/* Stops as selectable markers */}
           {route.stops.map((stop, idx) => (
-            <MapboxGL.PointAnnotation
+            <Marker
               key={`stop-${stop.id}`}
-              id={`stop-${idx}`}
-              coordinate={[
-                typeof stop.longitude === 'number' ? stop.longitude : 0,
-                typeof stop.latitude === 'number' ? stop.latitude : 0,
-              ]}
-              onSelected={() => handleStopPress(stop, idx)}
+              coordinate={{
+                latitude: typeof stop.latitude === 'number' ? stop.latitude : 0,
+                longitude: typeof stop.longitude === 'number' ? stop.longitude : 0,
+              }}
+              onPress={() => handleStopPress(stop, idx)}
             >
               <View style={
                 selectedOrigin?.idx === idx
@@ -121,28 +118,18 @@ const RouteDetailsScreen = () => {
               }>
                 <Text style={styles.stopMarkerText}>{idx + 1}</Text>
               </View>
-            </MapboxGL.PointAnnotation>
+            </Marker>
           ))}
           {/* Route Polyline */}
-          <MapboxGL.ShapeSource
-            id="route-line"
-            shape={{
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: route.stops.map(stop => [
-                  typeof stop.longitude === 'number' ? stop.longitude : 0,
-                  typeof stop.latitude === 'number' ? stop.latitude : 0,
-                ]),
-              },
-            } as any}
-          >
-            <MapboxGL.LineLayer
-              id="route-polyline"
-              style={{ lineColor: ROUTE_COLOR, lineWidth: 4 }}
-            />
-          </MapboxGL.ShapeSource>
-        </MapboxGL.MapView>
+          <Polyline
+            coordinates={route.stops.map(stop => ({
+              latitude: typeof stop.latitude === 'number' ? stop.latitude : 0,
+              longitude: typeof stop.longitude === 'number' ? stop.longitude : 0,
+            }))}
+            strokeColor={ROUTE_COLOR}
+            strokeWidth={4}
+          />
+        </MapView>
       </View>
       {/* Fare display */}
       <View style={styles.fareContainer}>

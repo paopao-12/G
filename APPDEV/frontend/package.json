@@ -3,34 +3,32 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "start": "react-native start",
-    "android": "react-native run-android",
-    "ios": "react-native run-ios"
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.1.2",
-    "@react-native-community/geolocation": "^3.4.0",
-    "@react-native-community/masked-view": "^0.1.11",
-    "@react-native-community/netinfo": "^11.4.1",
+    "@react-native-community/netinfo": "11.4.1",
     "@react-native-picker/picker": "2.11.0",
-    "@react-navigation/native": "^7.1.10",
-    "@react-navigation/native-stack": "^7.3.14",
-    "@rnmapbox/maps": "^10.1.39",
+    "@react-navigation/native": "^7.1.14",
+    "@react-navigation/native-stack": "^7.3.21",
     "axios": "^1.9.0",
+    "expo": "^53.0.0",
+    "expo-location": "~18.1.5",
+    "metro": "^0.82.0",
     "react": "19.0.0",
-    "react-native": "0.79.2",
-    "react-native-gesture-handler": "2.24.0",
+    "react-native": "0.79.4",
+    "react-native-gesture-handler": "~2.24.0",
     "react-native-maps": "1.20.1",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
-    "react-native-safe-area-view": "^2.0.0",
-    "react-native-screens": "~4.10.0",
-    "react-navigation-stack": "^2.10.4"
+    "react-native-screens": "~4.11.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "@react-native-community/cli": "latest",
-    "@types/react": "~19.0.10",
+    "@types/react": "~18.2.45",
     "react-native-clean-project": "^4.0.3",
     "typescript": "~5.8.3"
   },

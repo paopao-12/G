@@ -29,7 +29,7 @@ export default function RouteSuggestScreen() {
       return;
     }
     try {
-      const res = await axios.get('http://192.168.254.106:3001/routes/suggest', {
+      const res = await axios.get('http://192.168.254.106:4000/routes/suggest', {
         params: {
           originLat: origin.latitude,
           originLon: origin.longitude,
@@ -40,7 +40,7 @@ export default function RouteSuggestScreen() {
       setSuggestion(res.data);
       if (res.data.type === 'direct' && res.data.route_id) {
         // Fetch shape for the route
-        const shapeRes = await axios.get('http://192.168.254.106:3001/route_shape', {
+        const shapeRes = await axios.get('http://192.168.254.106:4000/route_shape', {
           params: { route_id: res.data.route_id },
         });
         setRouteShape(shapeRes.data.shape);

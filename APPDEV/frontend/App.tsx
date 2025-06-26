@@ -7,13 +7,9 @@ import { ResultsScreen } from './src/screens/ResultsScreen';
 import RouteDetailsScreen from './src/screens/RouteDetailsScreen';
 import { RootStackParamList } from './src/types/navigation';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import MapboxGL from '@rnmapbox/maps';
 import AdminUsersScreen from './src/screens/AdminUsersScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-
-const MAPBOX_ACCESS_TOKEN = process.env.MAPBOX_ACCESS_TOKEN;
-MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
 
 const linking: LinkingOptions<RootStackParamList> = {
   prefixes: ['myapp://', 'https://myapp.com', 'http://localhost:4000'], // Add your custom scheme and web URLs

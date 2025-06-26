@@ -30,7 +30,7 @@ import Animated, {
   useAnimatedGestureHandler,
   runOnJS,
 } from 'react-native-reanimated';
-import Geolocation from '@react-native-community/geolocation';
+import * as Location from 'expo-location';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -161,30 +161,30 @@ const HomeScreen = () => {
   const requestLocationPermission = async () => {
     try {
       setLocationLoading(true);
-      // For Android, request permission manually if needed
-      // (React Native CLI does not auto-prompt for location permission)
-      // You may want to use react-native-permissions for a production app
-      Geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation(position);
-          // Find nearest stops
-          api.findNearestStops({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          }, 500).then((nearest) => {
-            setNearestStops(nearest.map(ns => ns.stop));
-            if (nearest.length > 0) {
-              setOriginStop(nearest[0].stop.id);
-              setOriginSearchText(nearest[0].stop.name);
-            }
-          });
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          Alert.alert('Error', 'Failed to get your current location');
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
+      // Request permission using Expo Location
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location permission is required to find nearby stops.');
+        setLocationLoading(false);
+        return;
+      }
+      // Get current position
+      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+      setUserLocation(position);
+      // Find nearest stops
+      api.findNearestStops({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      }, 500).then((nearest) => {
+        setNearestStops(nearest.map(ns => ns.stop));
+        if (nearest.length > 0) {
+          setOriginStop(nearest[0].stop.id);
+          setOriginSearchText(nearest[0].stop.name);
+        }
+      });
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert('Error', 'Failed to get your current location');
     } finally {
       setLocationLoading(false);
     }

@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { GOOGLE_MAPS_API_KEY } from '../config/maps';
-import Geolocation from '@react-native-community/geolocation';
+import * as Location from 'expo-location';
 
 
 const API_URL = Platform.select({
@@ -564,21 +564,21 @@ const api = {
 
     
     getCurrentLocation: async (): Promise<UserLocation> => {
-        return new Promise((resolve, reject) => {
-            Geolocation.getCurrentPosition(
-                (position) => {
-                    resolve({
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
-                    });
-                },
-                (error) => {
-                    console.error('Error getting location:', error);
-                    reject(new Error('Failed to get current location'));
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-        });
+        try {
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                throw new Error('Location permission not granted');
+            }
+            const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+            return {
+                latitude: location.coords.latitude,
+                longitude: location.coords.longitude,
+                timestamp: location.timestamp,
+            };
+        } catch (error) {
+            console.error('Error getting location:', error);
+            throw new Error('Failed to get current location');
+        }
     },
 
     
