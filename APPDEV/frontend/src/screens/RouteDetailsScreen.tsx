@@ -12,48 +12,71 @@ import {
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
-import api, { Route } from '../services/api';
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
+import api, { FareInfo } from '../services/api';
+import MapboxGL from '@rnmapbox/maps';
 import { RootStackParamList } from '../types/navigation';
-import { PassengerType } from '../types';
 import { MaterialIcons } from '@expo/vector-icons';
 
 type RouteDetailsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'RouteDetails'>;
 type RouteDetailsScreenRouteProp = RouteProp<RootStackParamList, 'RouteDetails'>;
 
+// Add a type for stops with index
+interface IndexedStop {
+  latitude: number;
+  longitude: number;
+  idx: number;
+}
+
+const ROUTE_COLOR = '#007AFF';
+
 const RouteDetailsScreen = () => {
+  const [selectedOrigin, setSelectedOrigin] = useState<IndexedStop | null>(null);
+  const [selectedDestination, setSelectedDestination] = useState<IndexedStop | null>(null);
+  const [fareInfo, setFareInfo] = useState<FareInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const routeParams = useRoute<RouteDetailsScreenRouteProp>().params;
   const navigation = useNavigation<RouteDetailsScreenNavigationProp>();
-  const { route, passengerType } = routeParams;
+  const { route } = routeParams;
 
-  // Calculate route bounds for map
+  // Map stops to coordinates
   const coordinates = route.stops.map(stop => ({
     latitude: stop.latitude,
     longitude: stop.longitude,
   }));
 
-  // Calculate the center point of the route
-  const centerLat = coordinates.reduce((sum, coord) => sum + coord.latitude, 0) / coordinates.length;
-  const centerLng = coordinates.reduce((sum, coord) => sum + coord.longitude, 0) / coordinates.length;
-
-  // Calculate the map region to show all stops
-  const getMapRegion = () => {
-    const minLat = Math.min(...coordinates.map(coord => coord.latitude));
-    const maxLat = Math.max(...coordinates.map(coord => coord.latitude));
-    const minLng = Math.min(...coordinates.map(coord => coord.longitude));
-    const maxLng = Math.max(...coordinates.map(coord => coord.longitude));
-
-    const latDelta = (maxLat - minLat) * 1.5; // Add 50% padding
-    const lngDelta = (maxLng - minLng) * 1.5;
-
-    return {
-      latitude: centerLat,
-      longitude: centerLng,
-      latitudeDelta: Math.max(latDelta, 0.01), // Minimum zoom level
-      longitudeDelta: Math.max(lngDelta, 0.01),
-    };
+  // Handle stop selection for origin/destination
+  const handleStopPress = (stop: { latitude: number; longitude: number }, idx: number) => {
+    const indexedStop: IndexedStop = { ...stop, idx };
+    if (!selectedOrigin) {
+      setSelectedOrigin(indexedStop);
+    } else if (!selectedDestination) {
+      setSelectedDestination(indexedStop);
+    } else {
+      setSelectedOrigin(indexedStop);
+      setSelectedDestination(null);
+      setFareInfo(null);
+    }
   };
+
+  // Calculate fare when both origin and destination are selected
+  useEffect(() => {
+    const fetchFare = async () => {
+      if (selectedOrigin && selectedDestination) {
+        setLoading(true);
+        try {
+          // Pass coordinates or index to the API as needed
+          const info = await api.getFare(selectedOrigin.idx, selectedDestination.idx);
+          setFareInfo(info);
+        } catch (e) {
+          // Optionally handle or log the error, or remove the catch if not needed
+          Alert.alert('Error', 'Failed to calculate fare.');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchFare();
+  }, [selectedOrigin, selectedDestination]);
 
   return (
     <ScrollView style={styles.container}>
@@ -66,108 +89,70 @@ const RouteDetailsScreen = () => {
         </TouchableOpacity>
         <Text style={styles.routeName}>{route.routeName}</Text>
       </View>
-
       <View style={styles.mapContainer}>
-        <MapView
-          provider={PROVIDER_GOOGLE}
+        <MapboxGL.MapView
           style={styles.map}
-          initialRegion={getMapRegion()}
-          showsUserLocation={true}
-          showsMyLocationButton={true}
-          showsCompass={true}
-          showsScale={true}
+          styleURL={MapboxGL.StyleURL.Street}
+          logoEnabled={false}
+          compassEnabled
+          scaleBarEnabled
         >
-          {/* Origin Marker */}
-          <Marker
-            coordinate={coordinates[0]}
-            title="Origin"
-            description={route.from.name}
-          >
-            <View style={styles.markerContainer}>
-              <MaterialIcons name="location-on" size={30} color="#4CAF50" />
-            </View>
-          </Marker>
-
-          {/* Destination Marker */}
-          <Marker
-            coordinate={coordinates[coordinates.length - 1]}
-            title="Destination"
-            description={route.to.name}
-          >
-            <View style={styles.markerContainer}>
-              <MaterialIcons name="flag" size={30} color="#F44336" />
-            </View>
-          </Marker>
-
-          {/* Stop Markers */}
-          {coordinates.slice(1, -1).map((coord, index) => (
-            <Marker
-              key={index}
-              coordinate={coord}
-              title={`Stop ${index + 2}`}
-              description={route.stops[index + 1].name}
-            >
-              <View style={styles.stopMarkerContainer}>
-                <Text style={styles.stopMarkerText}>{index + 2}</Text>
-              </View>
-            </Marker>
-          ))}
-
-          {/* Route Polyline */}
-          <Polyline
-            coordinates={coordinates}
-            strokeColor="#007AFF"
-            strokeWidth={4}
-            lineDashPattern={[1]}
+          <MapboxGL.Camera
+            centerCoordinate={coordinates.length > 0 ? [coordinates[0].longitude, coordinates[0].latitude] : [125.6, 7.07]}
+            zoomLevel={13}
           />
-        </MapView>
+          {/* Stops as selectable markers */}
+          {route.stops.map((stop, idx) => (
+            <MapboxGL.PointAnnotation
+              key={`stop-${stop.id}`}
+              id={`stop-${idx}`}
+              coordinate={[
+                typeof stop.longitude === 'number' ? stop.longitude : 0,
+                typeof stop.latitude === 'number' ? stop.latitude : 0,
+              ]}
+              onSelected={() => handleStopPress(stop, idx)}
+            >
+              <View style={
+                selectedOrigin?.idx === idx
+                  ? styles.originMarker
+                  : selectedDestination?.idx === idx
+                  ? styles.destinationMarker
+                  : styles.stopMarker
+              }>
+                <Text style={styles.stopMarkerText}>{idx + 1}</Text>
+              </View>
+            </MapboxGL.PointAnnotation>
+          ))}
+          {/* Route Polyline */}
+          <MapboxGL.ShapeSource
+            id="route-line"
+            shape={{
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates: route.stops.map(stop => [
+                  typeof stop.longitude === 'number' ? stop.longitude : 0,
+                  typeof stop.latitude === 'number' ? stop.latitude : 0,
+                ]),
+              },
+            } as any}
+          >
+            <MapboxGL.LineLayer
+              id="route-polyline"
+              style={{ lineColor: ROUTE_COLOR, lineWidth: 4 }}
+            />
+          </MapboxGL.ShapeSource>
+        </MapboxGL.MapView>
       </View>
-
-      <View style={styles.routeInfo}>
-        <View style={styles.infoRow}>
-          <MaterialIcons name="directions-bus" size={24} color="#007AFF" />
-          <Text style={styles.routeName}>{route.routeName}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <MaterialIcons name="location-on" size={24} color="#4CAF50" />
-          <Text style={styles.routeText}>{route.from.name}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <MaterialIcons name="flag" size={24} color="#F44336" />
-          <Text style={styles.routeText}>{route.to.name}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <MaterialIcons name="straighten" size={24} color="#FF9800" />
-          <Text style={styles.routeText}>{(route.distance / 1000).toFixed(2)} km</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <MaterialIcons name="access-time" size={24} color="#9C27B0" />
-          <Text style={styles.routeText}>{route.estimatedTime} minutes</Text>
-        </View>
+      {/* Fare display */}
+      <View style={styles.fareContainer}>
+        <Text style={styles.fareLabel}>Origin: {selectedOrigin ? `Stop ${selectedOrigin.idx + 1}` : 'Tap a stop'}</Text>
+        <Text style={styles.fareLabel}>Destination: {selectedDestination ? `Stop ${selectedDestination.idx + 1}` : 'Tap a stop'}</Text>
+        {loading && <ActivityIndicator size="small" color="#007AFF" />}
+        {fareInfo && (
+          <Text style={styles.fareText}>Estimated Fare: ₱{fareInfo.fare.toFixed(2)}</Text>
+        )}
       </View>
-
-      <View style={styles.stopsList}>
-        <Text style={styles.sectionTitle}>Stops</Text>
-        {route.stops.map((stop, index) => (
-          <View key={stop.id} style={styles.stopItem}>
-            <View style={styles.stopNumber}>
-              <Text style={styles.stopNumberText}>{index + 1}</Text>
-            </View>
-            <View style={styles.stopInfo}>
-              <Text style={styles.stopName}>{stop.name}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.fareInfo}>
-        <Text style={styles.sectionTitle}>Fare Information</Text>
-        <Text style={styles.fareText}>Base Fare: ₱{route.fare.toFixed(2)}</Text>
-        <Text style={styles.fareText}>
-          Discounted Fare: ₱{getDiscountedFare(route.fare, passengerType).toFixed(2)}
-        </Text>
-      </View>
-
       <TouchableOpacity
         style={styles.button}
         onPress={() => navigation.goBack()}
@@ -176,18 +161,6 @@ const RouteDetailsScreen = () => {
       </TouchableOpacity>
     </ScrollView>
   );
-};
-
-const getDiscountedFare = (fare: number, type: PassengerType) => {
-  switch (type) {
-    case 'student':
-      return fare * 0.8; // 20% discount
-    case 'senior':
-    case 'pwd':
-      return fare * 0.5; // 50% discount
-    default:
-      return fare;
-  }
 };
 
 const styles = StyleSheet.create({
@@ -225,117 +198,72 @@ const styles = StyleSheet.create({
   map: {
     ...StyleSheet.absoluteFillObject,
   },
-  markerContainer: {
+  stopMarker: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 6,
+    borderWidth: 2,
+    borderColor: '#007AFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stopMarkerContainer: {
-    backgroundColor: '#007AFF',
-    borderRadius: 15,
-    width: 30,
-    height: 30,
+  originMarker: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+    padding: 6,
+    borderWidth: 2,
+    borderColor: '#388E3C',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  destinationMarker: {
+    backgroundColor: '#F44336',
+    borderRadius: 12,
+    padding: 6,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: '#B71C1C',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   stopMarkerText: {
-    color: '#fff',
-    fontSize: 12,
+    color: '#333',
     fontWeight: 'bold',
   },
-  routeInfo: {
-    backgroundColor: '#fff',
-    padding: 16,
+  fareContainer: {
     margin: 16,
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  routeText: {
-    fontSize: 16,
-    color: '#333',
-    marginLeft: 12,
-  },
-  stopsList: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#333',
-  },
-  stopItem: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 12,
+    backgroundColor: 'white',
     borderRadius: 8,
-    marginBottom: 8,
-    elevation: 2,
+    padding: 12,
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  stopNumber: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#007AFF',
-    justifyContent: 'center',
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
     alignItems: 'center',
-    marginRight: 12,
   },
-  stopNumberText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  stopInfo: {
-    flex: 1,
-  },
-  stopName: {
-    fontSize: 16,
-    color: '#333',
+  fareLabel: {
+    fontSize: 14,
+    color: '#666',
     marginBottom: 4,
   },
-  fareInfo: {
-    backgroundColor: '#fff',
-    padding: 16,
-    margin: 16,
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
   fareText: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 8,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    margin: 16,
-  },
-  buttonText: {
-    color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+    color: '#007AFF',
+    marginTop: 8,
+  },
+  button: {
+    margin: 16,
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 
-export default RouteDetailsScreen; 
+export default RouteDetailsScreen;

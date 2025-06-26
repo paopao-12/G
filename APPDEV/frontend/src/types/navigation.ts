@@ -12,4 +12,7 @@ export type RootStackParamList = {
     route: RouteSuggestion;
     passengerType: PassengerType;
   };
-}; 
+  LoginSignup: undefined;
+  ResetPassword: { token?: string } | undefined;
+  AdminUsers: undefined;
+};

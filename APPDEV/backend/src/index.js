@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const transportRoutes = require('./routes/transportRoutes');
+const authRoutes = require('./routes/authRoutes');
+
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -8,6 +10,8 @@ const port = process.env.PORT || 4000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+app.use('/', authRoutes);
 
 // Routes
 app.use('/api/transport', transportRoutes);

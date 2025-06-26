@@ -1,0 +1,53 @@
+route_id,route_short_name,route_long_name,route_type,route_color
+route_1,Bago Aplaya,Bago Aplaya,3,ff0000
+route_2,Bangkal,Bangkal,3,ffa500
+route_3,Bo. Obrero,Bo. Obrero,3,ffff00
+route_4,Buhangin via Dacudao,Buhangin via Dacudao,3,008000
+route_5,Buhangin via JP Laurel,Buhangin via JP Laurel,3,4da8ee
+route_6,Bunawan via Buhangin,Bunawan via Buhangin,3,8d72e1
+route_7,Bunawan via Sasa,Bunawan via Sasa,3,ffc0cb
+route_8,Calinan,Calinan,3,ff0000
+route_9,Camp Catitipan via JP Laurel,Camp Catitipan via JP Laurel,3,ffa500
+route_10,Catalunan Grande,Catalunan Grande,3,ffff00
+route_11,Ecoland,Ecoland,3,008000
+route_12,El Rio,El Rio,3,4da8ee
+route_13,Emily Homes,Emily Homes,3,8d72e1
+route_14,Jade Valley,Jade Valley,3,ffc0cb
+route_15,Lasang via Buhangin,Lasang via Buhangin,3,ff0000
+route_16,Lasang via Sasa,Lasang via Sasa,3,ffa500
+route_17,Maa - Agdao,Maa - Agdao,3,ffff00
+route_18,Maa - Bankerohan,Maa - Bankerohan,3,008000
+route_19,Magtuod,Magtuod,3,4da8ee
+route_20,Matina,Matina,3,8d72e1
+route_21,Matina Aplaya,Matina Aplaya,3,ffc0cb
+route_22,Matina Crossing,Matina Crossing,3,ff0000
+route_23,Matina Pangi,Matina Pangi,3,ffa500
+route_24,Mintal,Mintal,3,ffff00
+route_25,Panacan via Cabaguio,Panacan via Cabaguio,3,008000
+route_26,Panacan - SM City Davao,Panacan - SM City Davao,3,4da8ee
+route_27,Puan,Puan,3,8d72e1
+route_28,Route 1,Route 1,3,ffc0cb
+route_29,Route 2,Route 2,3,ff0000
+route_30,Route 3,Route 3,3,ffa500
+route_31,Route 4,Route 4,3,ffff00
+route_32,Route 5,Route 5,3,008000
+route_33,Route 6,Route 6,3,4da8ee
+route_34,Route 7,Route 7,3,8d72e1
+route_35,Route 8,Route 8,3,ffc0cb
+route_36,Route 9,Route 9,3,ff0000
+route_37,Route 10,Route 10,3,ffa500
+route_38,Route 11,Route 11,3,ffff00
+route_39,Route 12,Route 12,3,008000
+route_40,Route 13,Route 13,3,4da8ee
+route_41,Route 14,Route 14,3,8d72e1
+route_42,Route 15,Route 15,3,ffc0cb
+route_43,Sasa via Cabaguio,Sasa via Cabaguio,3,ff0000
+route_44,Sasa via JP Laurel,Sasa via JP Laurel,3,ffa500
+route_45,Sasa via R. Castillo,Sasa via R. Castillo,3,ffff00
+route_46,Talomo,Talomo,3,008000
+route_47,Tibungco via Buhangin,Tibungco via Buhangin,3,4da8ee
+route_48,Tibungco via Cabaguio,Tibungco via Cabaguio,3,8d72e1
+route_49,Tibungco via R. Castillo,Tibungco via R. Castillo,3,ffc0cb
+route_50,Toril,Toril,3,ff0000
+route_51,Ulas,Ulas,3,ffa500
+route_52,Wa-an,Wa-an,3,ffff00

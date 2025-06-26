@@ -33,6 +33,15 @@ export interface Route {
   id: number;
   name: string;
   stops: RouteStop[];
+  path: Array<{ latitude: number; longitude: number }>;
+}
+
+export interface RouteSegment {
+  type: 'walking' | 'jeepney' | 'transfer';
+  distance: number;
+  duration: number;
+  path: Array<{ latitude: number; longitude: number }>;
+  instructions?: string;
 }
 
 export interface RouteSuggestion {
@@ -51,6 +60,7 @@ export interface RouteSuggestion {
   type: 'jeepney';
   stops: LocationOption[];
   routeName: string;
+  segments: RouteSegment[];
 }
 
 export interface RouteFilter {

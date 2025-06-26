@@ -1,12 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useNavigation, StackActions } from '@react-navigation/native';
 
-export const SplashScreen = () => {
+const SplashScreen = () => {
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      navigation.dispatch(StackActions.replace('LoginSignup'));
+    }, 2000); // Show splash for 2 seconds
+    return () => clearTimeout(timer);
+  }, [navigation]);
+
   return (
     <View style={styles.container}>
-      <View style={styles.logoContainer}>
-        <Text style={styles.logoText}>G!</Text>
-      </View>
+      <Text style={styles.logoText}>G!</Text>
     </View>
   );
 };
@@ -18,22 +26,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  logoContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 60,
-    padding: 24,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-  },
   logoText: {
-    fontSize: 64,
+    fontSize: 96,
     fontWeight: 'bold',
-    color: '#0a662e',
-    textShadowColor: '#fff',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 2,
+    color: '#fff',
+    textShadowColor: '#0a662e',
+    textShadowOffset: { width: 4, height: 4 },
+    textShadowRadius: 6,
+    textAlign: 'center',
   },
-}); 
+});
+
+export default SplashScreen;

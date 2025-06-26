@@ -1,128 +1,69 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
-import MapView, { Marker, Polyline, PROVIDER_GOOGLE, Callout, Region } from 'react-native-maps';
-import api, { Route, JeepneyLocation, MapRegion, TrafficData } from '../services/api';
+import { View, StyleSheet, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import MapboxGL from '@rnmapbox/maps';
+import api, { Route, RouteStop, FareInfo } from '../services/api';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 interface RouteMapProps {
-    route: Route;
+    routes: Route[]; // Now accepts multiple routes
     onStopPress?: (stopId: number) => void;
     showJeepneyLocations?: boolean;
     showTraffic?: boolean;
-    showAlternativeRoutes?: boolean;
-}
-
-interface StopInfo {
-    name: string;
-    nextJeepneyArrival?: Date;
-    passengerCount?: number;
 }
 
 const RouteMap: React.FC<RouteMapProps> = ({
-    route,
+    routes,
     onStopPress,
     showJeepneyLocations = true,
     showTraffic = true,
-    showAlternativeRoutes = true,
 }) => {
-    const [jeepneyLocations, setJeepneyLocations] = useState<JeepneyLocation[]>([]);
-    const [mapRegion, setMapRegion] = useState<Region | null>(null);
-    const [selectedStop, setSelectedStop] = useState<StopInfo | null>(null);
+    const [selectedOrigin, setSelectedOrigin] = useState<RouteStop | null>(null);
+    const [selectedDestination, setSelectedDestination] = useState<RouteStop | null>(null);
+    const [fareInfo, setFareInfo] = useState<FareInfo | null>(null);
     const [loading, setLoading] = useState(true);
-    const [trafficData, setTrafficData] = useState<TrafficData>({});
-    const [walkingDirections, setWalkingDirections] = useState<any[]>([]);
-    const [showStreetView, setShowStreetView] = useState(false);
-    const [streetViewLocation, setStreetViewLocation] = useState<{lat: number, lng: number} | null>(null);
-    const mapRef = useRef<MapView>(null);
+    const [mapRegion, setMapRegion] = useState<{ latitude: number; longitude: number } | null>(null);
+    const mapRef = useRef<MapboxGL.MapView>(null);
+
+    // Assign a color to each route
+    const ROUTE_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD', '#D4A5A5', '#9B59B6', '#3498DB', '#E67E22', '#2ECC71'];
 
     useEffect(() => {
-        initializeMap();
-    }, [route.id]);
+        if (routes.length > 0) {
+            // Center map on first route's first stop
+            const firstStop = routes[0].stops[0];
+            setMapRegion({ latitude: firstStop.latitude, longitude: firstStop.longitude });
+        }
+        setLoading(false);
+    }, [routes]);
 
-    const initializeMap = async () => {
-        try {
-            setLoading(true);
-            const region = api.getRouteMapRegion(route);
-            setMapRegion(region);
+    // Handle stop selection for origin/destination
+    const handleStopPress = (stop: RouteStop) => {
+        if (!selectedOrigin) {
+            setSelectedOrigin(stop);
+        } else if (!selectedDestination) {
+            setSelectedDestination(stop);
+        } else {
+            setSelectedOrigin(stop);
+            setSelectedDestination(null);
+            setFareInfo(null);
+        }
+        onStopPress?.(stop.stop_id);
+    };
 
-            if (showJeepneyLocations) {
-                await loadJeepneyLocations();
+    // Calculate fare when both origin and destination are selected
+    useEffect(() => {
+        const fetchFare = async () => {
+            if (selectedOrigin && selectedDestination) {
+                try {
+                    const info = await api.getFare(selectedOrigin.stop_id, selectedDestination.stop_id);
+                    setFareInfo(info);
+                } catch (e) {
+                    Alert.alert('Error', 'Failed to calculate fare.');
+                }
             }
-
-            if (showTraffic) {
-                await loadTrafficData();
-            }
-
-            if (showJeepneyLocations) {
-                const unsubscribe = api.subscribeToJeepneyUpdates(
-                    route.id,
-                    (locations) => {
-                        setJeepneyLocations(locations);
-                        updateStopInfo(locations);
-                    },
-                    (error) => {
-                        console.error('Error receiving jeepney updates:', error);
-                    }
-                );
-
-                return () => {
-                    unsubscribe();
-                };
-            }
-        } catch (error) {
-            console.error('Error initializing map:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const loadJeepneyLocations = async () => {
-        try {
-            const locations = await api.getJeepneyLocations(route.id);
-            setJeepneyLocations(locations);
-            updateStopInfo(locations);
-        } catch (error) {
-            console.error('Error loading jeepney locations:', error);
-        }
-    };
-
-    const loadTrafficData = async () => {
-        try {
-            const data = await api.getTrafficData(route.id);
-            setTrafficData(data);
-        } catch (error) {
-            console.error('Error loading traffic data:', error);
-        }
-    };
-
-    const getWalkingDirections = async (stop: Stop) => {
-        try {
-            const directions = await api.getWalkingDirections(
-                { latitude: userLocation?.coords.latitude || 0, longitude: userLocation?.coords.longitude || 0 },
-                { latitude: stop.latitude, longitude: stop.longitude }
-            );
-            setWalkingDirections(directions);
-        } catch (error) {
-            console.error('Error getting walking directions:', error);
-        }
-    };
-
-    const handleStopPress = (stop: Stop) => {
-        setSelectedStop(stop);
-        getWalkingDirections(stop);
-        onStopPress?.(stop.id);
-    };
-
-    const toggleStreetView = (stop: Stop) => {
-        setStreetViewLocation({ lat: stop.latitude, lng: stop.longitude });
-        setShowStreetView(true);
-    };
-
-    const getTrafficColor = (congestion: number) => {
-        if (congestion < 0.3) return '#4CAF50'; // Green
-        if (congestion < 0.7) return '#FFC107'; // Yellow
-        return '#F44336'; // Red
-    };
+        };
+        fetchFare();
+    }, [selectedOrigin, selectedDestination]);
 
     if (loading) {
         return (
@@ -135,166 +76,68 @@ const RouteMap: React.FC<RouteMapProps> = ({
 
     return (
         <View style={styles.container}>
-            <MapView
+            <MapboxGL.MapView
                 ref={mapRef}
                 style={styles.map}
-                provider={PROVIDER_GOOGLE}
-                initialRegion={mapRegion || undefined}
-                showsUserLocation
-                showsMyLocationButton
-                showsTraffic={showTraffic}
-                showsCompass
-                showsScale
-                showsBuildings
-                showsIndoors
-                mapType="standard"
+                styleURL={MapboxGL.StyleURL.Street}
             >
-                {/* Route path with traffic data */}
-                {route.stops.map((stop, index) => {
-                    if (index < route.stops.length - 1) {
-                        const nextStop = route.stops[index + 1];
-                        const segmentKey = `${stop.stop_id}-${nextStop.stop_id}`;
-                        const congestion = trafficData[segmentKey] || 0;
-
-                        return (
-                            <Polyline
-                                key={segmentKey}
-                                coordinates={[
-                                    { latitude: stop.latitude, longitude: stop.longitude },
-                                    { latitude: nextStop.latitude, longitude: nextStop.longitude },
-                                ]}
-                                strokeColor={getTrafficColor(congestion)}
-                                strokeWidth={5}
-                                lineDashPattern={[1]}
-                            />
-                        );
-                    }
-                    return null;
-                })}
-
-                {/* Walking Directions */}
-                {walkingDirections.length > 0 && (
-                    <Polyline
-                        coordinates={walkingDirections}
-                        strokeColor="#007AFF"
-                        strokeWidth={3}
-                        lineDashPattern={[1]}
+                {mapRegion && (
+                    <MapboxGL.Camera
+                        centerCoordinate={[mapRegion.longitude, mapRegion.latitude]}
+                        zoomLevel={13}
                     />
                 )}
-
-                {/* Stops with enhanced markers */}
-                {route.stops.map((stop, index) => (
-                    <Marker
-                        key={stop.id}
-                        coordinate={{
-                            latitude: stop.latitude,
-                            longitude: stop.longitude,
-                        }}
-                        title={stop.name}
-                        onPress={() => handleStopPress(stop)}
+                {/* Render all routes as color-coded polylines */}
+                {routes.map((route, idx) => (
+                    <MapboxGL.ShapeSource
+                        id={`route-shape-${route.id}`}
+                        key={`route-shape-${route.id}`}
+                        shape={{
+                            type: 'Feature',
+                            geometry: {
+                                type: 'LineString',
+                                coordinates: route.stops.map(stop => [stop.longitude, stop.latitude]),
+                            },
+                        } as any}
                     >
-                        <Callout>
-                            <View style={styles.callout}>
-                                <Text style={styles.calloutTitle}>{stop.name}</Text>
-                                <Text style={styles.calloutText}>
-                                    Next jeepney: {stop.nextJeepneyTime || 'No data'}
-                                </Text>
-                                <TouchableOpacity
-                                    style={styles.streetViewButton}
-                                    onPress={() => toggleStreetView(stop)}
-                                >
-                                    <Text style={styles.streetViewButtonText}>View Street</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </Callout>
-                    </Marker>
-                ))}
-
-                {/* Jeepney locations */}
-                {showJeepneyLocations && jeepneyLocations.map((jeepney) => (
-                    <Marker
-                        key={jeepney.id}
-                        coordinate={{
-                            latitude: jeepney.latitude,
-                            longitude: jeepney.longitude,
-                        }}
-                        title={`Jeepney ${jeepney.id}`}
-                        description={`Status: ${jeepney.status}`}
-                    >
-                        <View style={styles.jeepneyMarker}>
-                            <MaterialIcons name="directions-bus" size={24} color="#007AFF" />
-                        </View>
-                    </Marker>
-                ))}
-            </MapView>
-
-            {/* Street View Modal */}
-            <Modal
-                visible={showStreetView}
-                animationType="slide"
-                onRequestClose={() => setShowStreetView(false)}
-            >
-                <View style={styles.streetViewContainer}>
-                    <TouchableOpacity
-                        style={styles.closeButton}
-                        onPress={() => setShowStreetView(false)}
-                    >
-                        <MaterialIcons name="close" size={24} color="#000" />
-                    </TouchableOpacity>
-                    {streetViewLocation && (
-                        <MapView
-                            style={styles.streetView}
-                            provider={PROVIDER_GOOGLE}
-                            initialRegion={{
-                                latitude: streetViewLocation.lat,
-                                longitude: streetViewLocation.lng,
-                                latitudeDelta: 0.01,
-                                longitudeDelta: 0.01,
+                        <MapboxGL.LineLayer
+                            id={`route-line-${route.id}`}
+                            style={{
+                                lineColor: ROUTE_COLORS[idx % ROUTE_COLORS.length],
+                                lineWidth: 4,
+                                lineCap: 'round',
+                                lineJoin: 'round',
                             }}
-                            mapType="streetview"
                         />
-                    )}
-                </View>
-            </Modal>
-
-            {/* Controls */}
-            <View style={styles.controlsContainer}>
-                <TouchableOpacity
-                    style={styles.controlButton}
-                    onPress={loadJeepneyLocations}
-                >
-                    <Ionicons name="refresh" size={24} color="#000" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.controlButton}
-                    onPress={() => mapRef.current?.animateToRegion(mapRegion!)}
-                >
-                    <Ionicons name="locate" size={24} color="#000" />
-                </TouchableOpacity>
-                {showTraffic && (
-                    <TouchableOpacity
-                        style={styles.controlButton}
-                        onPress={loadTrafficData}
+                    </MapboxGL.ShapeSource>
+                ))}
+                {/* Render stops for all routes */}
+                {routes.map((route) => route.stops.map((stop) => (
+                    <MapboxGL.PointAnnotation
+                        key={`stop-${route.id}-${stop.stop_id}`}
+                        id={`stop-${route.id}-${stop.stop_id}`}
+                        coordinate={[stop.longitude, stop.latitude]}
+                        onSelected={() => handleStopPress(stop)}
                     >
-                        <Ionicons name="analytics" size={24} color="#000" />
-                    </TouchableOpacity>
+                        <View style={
+                            selectedOrigin?.stop_id === stop.stop_id
+                                ? styles.originMarker
+                                : selectedDestination?.stop_id === stop.stop_id
+                                ? styles.destinationMarker
+                                : styles.stopMarker
+                        }>
+                            <Text style={styles.stopMarkerText}>{stop.stop_name[0]}</Text>
+                        </View>
+                    </MapboxGL.PointAnnotation>
+                )))}
+            </MapboxGL.MapView>
+            {/* Fare display */}
+            <View style={styles.fareContainer}>
+                <Text style={styles.fareLabel}>Origin: {selectedOrigin ? selectedOrigin.stop_name : 'Tap a stop'}</Text>
+                <Text style={styles.fareLabel}>Destination: {selectedDestination ? selectedDestination.stop_name : 'Tap a stop'}</Text>
+                {fareInfo && (
+                    <Text style={styles.fareText}>Estimated Fare: ₱{fareInfo.fare.toFixed(2)}</Text>
                 )}
-            </View>
-
-            {/* Legend */}
-            <View style={styles.legendContainer}>
-                <View style={styles.legendItem}>
-                    <View style={[styles.legendColor, { backgroundColor: '#4CAF50' }]} />
-                    <Text style={styles.legendText}>Low Traffic</Text>
-                </View>
-                <View style={styles.legendItem}>
-                    <View style={[styles.legendColor, { backgroundColor: '#FFC107' }]} />
-                    <Text style={styles.legendText}>Medium Traffic</Text>
-                </View>
-                <View style={styles.legendItem}>
-                    <View style={[styles.legendColor, { backgroundColor: '#F44336' }]} />
-                    <Text style={styles.legendText}>High Traffic</Text>
-                </View>
             </View>
         </View>
     );
@@ -317,103 +160,63 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
     },
-    controlsContainer: {
-        position: 'absolute',
-        top: 20,
-        right: 20,
-        backgroundColor: 'white',
-        borderRadius: 8,
-        padding: 8,
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+    stopMarker: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 6,
+        borderWidth: 2,
+        borderColor: '#007AFF',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    controlButton: {
-        padding: 8,
-        marginVertical: 4,
+    originMarker: {
+        backgroundColor: '#4CAF50',
+        borderRadius: 12,
+        padding: 6,
+        borderWidth: 2,
+        borderColor: '#388E3C',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    legendContainer: {
+    destinationMarker: {
+        backgroundColor: '#F44336',
+        borderRadius: 12,
+        padding: 6,
+        borderWidth: 2,
+        borderColor: '#B71C1C',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    stopMarkerText: {
+        color: '#333',
+        fontWeight: 'bold',
+    },
+    fareContainer: {
         position: 'absolute',
         bottom: 20,
         left: 20,
+        right: 20,
         backgroundColor: 'white',
         borderRadius: 8,
-        padding: 8,
+        padding: 12,
         elevation: 4,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
-    },
-    legendItem: {
-        flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 4,
     },
-    legendColor: {
-        width: 20,
-        height: 20,
-        borderRadius: 4,
-        marginRight: 8,
-    },
-    legendText: {
-        fontSize: 12,
-        color: '#666',
-    },
-    callout: {
-        width: 200,
-        padding: 10,
-    },
-    calloutTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 5,
-    },
-    calloutText: {
+    fareLabel: {
         fontSize: 14,
         color: '#666',
-        marginBottom: 5,
+        marginBottom: 4,
     },
-    streetViewButton: {
-        backgroundColor: '#007AFF',
-        padding: 8,
-        borderRadius: 4,
-        marginTop: 5,
-    },
-    streetViewButtonText: {
-        color: 'white',
-        textAlign: 'center',
-        fontSize: 12,
-    },
-    jeepneyMarker: {
-        backgroundColor: 'white',
-        borderRadius: 20,
-        padding: 4,
-        borderWidth: 2,
-        borderColor: '#007AFF',
-    },
-    streetViewContainer: {
-        flex: 1,
-    },
-    streetView: {
-        flex: 1,
-    },
-    closeButton: {
-        position: 'absolute',
-        top: 40,
-        right: 20,
-        zIndex: 1,
-        backgroundColor: 'white',
-        borderRadius: 20,
-        padding: 8,
-        elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+    fareText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#007AFF',
+        marginTop: 8,
     },
 });
 
-export default RouteMap; 
+export default RouteMap;

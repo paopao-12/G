@@ -1,13 +1,13 @@
 import axios, { AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as ExpoLocation from 'expo-location';
 import { Platform } from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 import { GOOGLE_MAPS_API_KEY } from '../config/maps';
+import Geolocation from '@react-native-community/geolocation';
 
 
 const API_URL = Platform.select({
-    android: 'http://192.168.254.112:4000/api/transport', // For Android Emulator
+    android: 'http://192.168.254.106:4000/api/transport', // For Android Emulator
     ios: 'http://localhost:4000/api/transport', // For iOS Simulator
     default: 'http://localhost:4000/api/transport',
 });
@@ -197,6 +197,7 @@ export interface Route {
     jeepneyCount: number;
     operatingHours: string;
     fare: number;
+    path: Array<{ latitude: number; longitude: number }>;
 }
 
 export interface FareInfo {
@@ -225,6 +226,19 @@ export interface RouteSuggestion {
     duration: number; 
     accessibilityScore?: number;
     trafficLevel?: number | null;
+    segments: RouteSegment[];
+    totalWalkingDistance: number;
+    totalJeepneyDistance: number;
+    transferCount: number;
+    reliability: number;
+    crowdedness: number;
+    safety: number;
+    accessibility: {
+        wheelchair: boolean;
+        elevator: boolean;
+        escalator: boolean;
+        stairs: boolean;
+    };
 }
 
 export interface JeepneyLocation {
@@ -280,6 +294,7 @@ export interface RouteSegment {
     type: 'walking' | 'jeepney' | 'transfer';
     distance: number;
     duration: number;
+    path: Array<{ latitude: number; longitude: number }>;
     startStop?: Stop;
     endStop?: Stop;
     routeId?: number;
@@ -333,7 +348,7 @@ const handleError = (error: unknown, context: string): never => {
     if (error.response.status >= 500) {
       throw new Error('Server error. Please try again later.');
     }
-    throw new Error(error.response.data?.message || `Failed to ${context}`);
+    throw new Error(error.response.data?.message ?? `Failed to ${context}`);
   }
   
   throw error;
@@ -549,24 +564,21 @@ const api = {
 
     
     getCurrentLocation: async (): Promise<UserLocation> => {
-        try {
-            const { status } = await ExpoLocation.requestForegroundPermissionsAsync();
-            if (status !== 'granted') {
-                throw new Error('Location permission denied');
-            }
-
-            const location = await ExpoLocation.getCurrentPositionAsync({
-                accuracy: ExpoLocation.Accuracy.High,
-            });
-
-            return {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-            };
-        } catch (error) {
-            console.error('Error getting location:', error);
-            throw new Error('Failed to get current location');
-        }
+        return new Promise((resolve, reject) => {
+            Geolocation.getCurrentPosition(
+                (position) => {
+                    resolve({
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                    });
+                },
+                (error) => {
+                    console.error('Error getting location:', error);
+                    reject(new Error('Failed to get current location'));
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        });
     },
 
     
@@ -603,112 +615,34 @@ const api = {
         originLocation: UserLocation,
         destinationLocation: UserLocation,
         filters?: RouteFilter
-    ): Promise<RouteSuggestion[]> => {
+    ): Promise<any[]> => {
         try {
-            // Get all stops
-            const stops = await api.getStops();
-            
-            // Find nearest stops using Google Maps Distance Matrix API
-            const nearestStops = await Promise.all(
-                stops.map(async (stop) => {
-                    const response = await axios.get(
-                        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${originLocation.latitude},${originLocation.longitude}&destinations=${stop.latitude},${stop.longitude}&mode=walking&key=${GOOGLE_MAPS_API_KEY}`
-                    );
-                    
-                    return {
-                        stop,
-                        distance: response.data.rows[0].elements[0].distance.value,
-                        duration: response.data.rows[0].elements[0].duration.value
-                    };
-                })
+            // Call the new backend suggest endpoint
+            const response = await fetch(
+                `http://localhost:4000/routes/suggest?originLat=${originLocation.latitude}&originLon=${originLocation.longitude}&destLat=${destinationLocation.latitude}&destLon=${destinationLocation.longitude}`
             );
-
-            // Sort stops by distance
-            const sortedStops = nearestStops.sort((a, b) => a.distance - b.distance);
-            const nearestOriginStops = sortedStops.slice(0, 3); // Get 3 nearest stops
-
-            // Do the same for destination
-            const destinationStops = await Promise.all(
-                stops.map(async (stop) => {
-                    const response = await axios.get(
-                        `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${destinationLocation.latitude},${destinationLocation.longitude}&destinations=${stop.latitude},${stop.longitude}&mode=walking&key=${GOOGLE_MAPS_API_KEY}`
-                    );
-                    
-                    return {
-                        stop,
-                        distance: response.data.rows[0].elements[0].distance.value,
-                        duration: response.data.rows[0].elements[0].duration.value
-                    };
-                })
-            );
-
-            const sortedDestStops = destinationStops.sort((a, b) => a.distance - b.distance);
-            const nearestDestStops = sortedDestStops.slice(0, 3); // Get 3 nearest stops
-
-            // Get all routes
-            const routes = await api.getRoutes();
-            const suggestions: RouteSuggestion[] = [];
-
-            // For each origin-destination stop pair, find possible routes
-            for (const originStop of nearestOriginStops) {
-                for (const destStop of nearestDestStops) {
-                    // Find routes that contain both stops
-                    const validRoutes = routes.filter(route => {
-                        const originIndex = route.stops.findIndex(s => s.stop_id === originStop.stop.id);
-                        const destIndex = route.stops.findIndex(s => s.stop_id === destStop.stop.id);
-                        return originIndex !== -1 && destIndex !== -1 && originIndex < destIndex;
-                    });
-
-                    for (const route of validRoutes) {
-                        const originIndex = route.stops.findIndex(s => s.stop_id === originStop.stop.id);
-                        const destIndex = route.stops.findIndex(s => s.stop_id === destStop.stop.id);
-
-                        // Get detailed route from Google Maps
-                        const response = await axios.get(
-                            `https://maps.googleapis.com/maps/api/directions/json?origin=${originStop.stop.latitude},${originStop.stop.longitude}&destination=${destStop.stop.latitude},${destStop.stop.longitude}&mode=transit&key=${GOOGLE_MAPS_API_KEY}`
-                        );
-
-                        if (response.data.routes.length > 0) {
-                            const googleRoute = response.data.routes[0];
-                            const leg = googleRoute.legs[0];
-
-                            // Calculate total distance including walking to/from stops
-                            const totalDistance = originStop.distance + leg.distance.value + destStop.distance;
-                            const totalDuration = originStop.duration + leg.duration.value + destStop.duration;
-
-                            // Calculate fare based on distance
-                            const fare = Math.ceil(10 + ((totalDistance / 1000) * 2));
-
-                            // Get traffic data if available
-                            let trafficLevel = null;
-                            try {
-                                const trafficResponse = await axios.get(
-                                    `https://maps.googleapis.com/maps/api/directions/json?origin=${originStop.stop.latitude},${originStop.stop.longitude}&destination=${destStop.stop.latitude},${destStop.stop.longitude}&departure_time=now&traffic_model=best_guess&key=${GOOGLE_MAPS_API_KEY}`
-                                );
-                                if (trafficResponse.data.routes[0].legs[0].duration_in_traffic) {
-                                    trafficLevel = trafficResponse.data.routes[0].legs[0].duration_in_traffic.value / leg.duration.value;
-                                }
-                            } catch (error) {
-                                console.error('Error getting traffic data:', error);
-                            }
-
-                            suggestions.push({
-                                route,
-                                originStop: route.stops[originIndex],
-                                destinationStop: route.stops[destIndex],
-                                estimatedFare: fare,
-                                distance: totalDistance,
-                                duration: totalDuration / 60, // Convert to minutes
-                                accessibilityScore: 1,
-                                trafficLevel
-                            });
-                        }
-                    }
-                }
+            const data = await response.json();
+            if (data.type === 'walk') {
+                return [{ type: 'walk', message: data.message }];
+            } else if (data.type === 'direct') {
+                return [{
+                    type: 'direct',
+                    route_id: data.route_id,
+                    origin_stop: data.origin_stop,
+                    destination_stop: data.destination_stop
+                }];
+            } else if (data.type === 'transfer') {
+                return [{
+                    type: 'transfer',
+                    origin_route: data.origin_route,
+                    transfer_stop: data.transfer_stop,
+                    destination_route: data.destination_route,
+                    origin_stop: data.origin_stop,
+                    destination_stop: data.destination_stop
+                }];
+            } else {
+                return [{ type: 'none', message: data.message }];
             }
-
-            // Sort suggestions by total duration
-            return suggestions.sort((a, b) => a.duration - b.duration);
         } catch (error) {
             console.error('Error getting route suggestions:', error);
             throw new Error('Failed to get route suggestions');
@@ -867,6 +801,21 @@ const api = {
             throw error;
         }
     },
+
+    // Add: Get all users (admin only)
+    getAllUsers: async (): Promise<Array<{ id: number; email: string; role: string }>> => {
+      try {
+        const token = await AsyncStorage.getItem('jwt_token');
+        if (!token) throw new Error('Not authenticated');
+        const response = await axiosInstance.get('/users', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        return response.data;
+      } catch (error) {
+        handleError(error, 'fetching all users');
+        throw error; 
+      }
+    },
 };
 
 // Helper function to decode Google's polyline format
@@ -909,97 +858,5 @@ function decodePolyline(encoded: string): Array<{ latitude: number; longitude: n
 
     return poly;
 }
-
-// Helper functions for enhanced features
-const calculateReliability = (routeId: number): number => {
-    // Implement reliability calculation based on historical data
-    return 0.8; // Placeholder
-};
-
-const calculateCrowdedness = (time: Date): number => {
-    const hour = time.getHours();
-    if (hour >= 7 && hour <= 9) return 0.9; // Morning rush
-    if (hour >= 17 && hour <= 19) return 0.9; // Evening rush
-    if (hour >= 11 && hour <= 14) return 0.7; // Lunch time
-    return 0.4; // Off-peak
-};
-
-const calculateSafetyScore = (routeId: number): number => {
-    // Implement safety score calculation based on historical data
-    return 0.85; // Placeholder
-};
-
-const checkAccessibility = async (routeId: number) => {
-    // Implement accessibility check
-    return {
-        wheelchair: true,
-        elevator: false,
-        escalator: false,
-        stairs: true
-    };
-};
-
-const calculateAccessibilityScore = (accessibility: any): number => {
-    let score = 0;
-    if (accessibility.wheelchair) score += 0.4;
-    if (accessibility.elevator) score += 0.3;
-    if (accessibility.escalator) score += 0.2;
-    if (accessibility.stairs) score += 0.1;
-    return score;
-};
-
-const calculateTrafficLevel = (trafficData: TrafficData): number => {
-    // Implement traffic level calculation
-    return 0.5; // Placeholder
-};
-
-const calculateFare = (distance: number): number => {
-    return Math.ceil(10 + ((distance / 1000) * 2));
-};
-
-const calculateTotalDuration = (segments: RouteSegment[]): number => {
-    return segments.reduce((total, segment) => total + segment.duration, 0) / 60; // Convert to minutes
-};
-
-const sortSuggestions = (suggestions: EnhancedRouteSuggestion[], filters?: RouteFilter): EnhancedRouteSuggestion[] => {
-    if (!filters) return suggestions.sort((a, b) => a.duration - b.duration);
-
-    return suggestions.sort((a, b) => {
-        let scoreA = 0;
-        let scoreB = 0;
-
-        // Duration preference
-        if (filters.timePreference === 'fastest') {
-            scoreA -= a.duration;
-            scoreB -= b.duration;
-        }
-
-        // Walking preference
-        if (filters.walkingPreference === 'minimal') {
-            scoreA -= a.totalWalkingDistance;
-            scoreB -= b.totalWalkingDistance;
-        }
-
-        // Transfer preference
-        if (filters.transferPreference === 'minimal') {
-            scoreA -= a.transferCount * 1000;
-            scoreB -= b.transferCount * 1000;
-        }
-
-        // Traffic awareness
-        if (filters.trafficAware) {
-            scoreA -= (a.trafficLevel || 0) * 1000;
-            scoreB -= (b.trafficLevel || 0) * 1000;
-        }
-
-        // Accessibility
-        if (filters.accessibility) {
-            scoreA += (a.accessibilityScore || 0) * 1000;
-            scoreB += (b.accessibilityScore || 0) * 1000;
-        }
-
-        return scoreB - scoreA;
-    });
-};
 
 export default api;

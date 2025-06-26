@@ -9,7 +9,7 @@ import {
 import { RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation';
-import { RouteSuggestion, PassengerType } from '../types';
+import { PassengerType } from '../types';
 import { MaterialIcons } from '@expo/vector-icons';
 
 type Props = {
@@ -184,4 +184,4 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 4,
   },
-}); 
+});

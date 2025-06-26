@@ -10,7 +10,7 @@ export const calculateFare = (distance: number, passengerType: PassengerType): F
   const additionalFare = Math.ceil(additionalDistance) * ADDITIONAL_FARE_PER_KM;
   let totalFare = baseFare + additionalFare;
 
-  // Apply discounts
+  
   let discountedFare: number | undefined = undefined;
   if (passengerType === 'student') {
     discountedFare = totalFare * 0.8;
@@ -18,7 +18,7 @@ export const calculateFare = (distance: number, passengerType: PassengerType): F
     discountedFare = totalFare * 0.5;
   }
 
-  // Round to nearest 0.25
+  
   totalFare = Math.round(totalFare * 4) / 4;
   if (discountedFare !== undefined) {
     discountedFare = Math.round(discountedFare * 4) / 4;
