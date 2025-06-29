@@ -1,7 +1,10 @@
 import { RouteSuggestion, LocationOption, PassengerType } from './index';
 
 export type RootStackParamList = {
+  Splash: undefined;
+  LoginSignup: undefined;
   Home: undefined;
+  RouteSuggest: undefined
   Results: {
     origin: string;
     destination: string;
@@ -12,7 +15,6 @@ export type RootStackParamList = {
     route: RouteSuggestion;
     passengerType: PassengerType;
   };
-  LoginSignup: undefined;
   ResetPassword: { token?: string } | undefined;
   AdminUsers: undefined;
 };

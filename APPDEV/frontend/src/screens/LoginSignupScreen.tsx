@@ -1,9 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Button, TextInput, Alert, Modal, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Button,
+  TextInput,
+  Alert,
+  Modal,
+  TouchableOpacity,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BACKEND_URL = 'http://localhost:4000'; // Change to your backend URL
+const BACKEND_URL = 'http://192.168.254.108:4000'; // Update to your backend URL
 
 const LoginSignupScreen = () => {
   const navigation = useNavigation();
@@ -12,7 +21,11 @@ const LoginSignupScreen = () => {
   const [loading, setLoading] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // Add this line
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.clear();
+  }, []);
 
   const handleLogin = async () => {
     setLoading(true);
@@ -24,19 +37,16 @@ const LoginSignupScreen = () => {
       });
       const data = await response.json();
       if (response.ok) {
-        // Store user role and JWT token in AsyncStorage
         await AsyncStorage.setItem('user_role', data.role);
         if (data.token) {
           await AsyncStorage.setItem('jwt_token', data.token);
         }
-        // Navigate to Home or wherever
         (navigation as any).navigate('Home');
       } else {
         Alert.alert('Login Failed', data.message ?? 'Invalid credentials');
       }
     } catch (error) {
-      // Optionally handle or log the error, or remove the catch if not needed
-      Alert.alert('Error', 'Could not connect to server');
+      Alert.alert('Error, Could not connect to server');
     } finally {
       setLoading(false);
     }
@@ -53,12 +63,13 @@ const LoginSignupScreen = () => {
       const data = await response.json();
       if (response.ok) {
         Alert.alert('Signup Success', 'You can now log in.');
+        setEmail('');
+        setPassword('');
       } else {
         Alert.alert('Signup Failed', data.message ?? 'Could not sign up');
       }
     } catch (error) {
-      // Optionally handle or log the error, or remove the catch if not needed
-      Alert.alert('Error', 'Could not connect to server');
+      Alert.alert('Error, Could not connect to server');
     } finally {
       setLoading(false);
     }
@@ -80,8 +91,7 @@ const LoginSignupScreen = () => {
       setShowForgot(false);
       setForgotEmail('');
     } catch (error) {
-      // Optionally handle or log the error, or remove the catch if not needed
-      Alert.alert('Error', 'Could not connect to server');
+      Alert.alert('Error Could not connect to server');
     }
   };
 
@@ -96,35 +106,45 @@ const LoginSignupScreen = () => {
         value={email}
         onChangeText={setEmail}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry={!showPassword}
-        value={password}
-        onChangeText={setPassword}
-      />
-      <TouchableOpacity
-        onPress={() => setShowPassword((prev) => !prev)}
-        style={{ position: 'absolute', right: 40, top: 185 }}
-        accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-      >
-        <Text style={{ color: '#0a662e', fontWeight: 'bold' }}>
-          {showPassword ? 'Hide' : 'Show'}
-        </Text>
-      </TouchableOpacity>
+
+      <View style={styles.passwordContainer}>
+        <TextInput
+          style={styles.passwordInput}
+          placeholder="Password"
+          secureTextEntry={!showPassword}
+          value={password}
+          onChangeText={setPassword}
+        />
+        <TouchableOpacity
+          onPress={() => setShowPassword(prev => !prev)}
+          accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
+        >
+          <Text style={styles.showHideText}>
+            {showPassword ? 'Hide' : 'Show'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <View style={styles.buttonRow}>
         <Button title="Login" onPress={handleLogin} disabled={loading} />
         <Button title="Sign Up" onPress={handleSignup} disabled={loading} />
       </View>
+
       <View style={{ marginTop: 16 }}>
-        <Text style={{ color: '#0a662e', textDecorationLine: 'underline' }} onPress={() => setShowForgot(true)}>
+        <Text
+          style={styles.forgotText}
+          onPress={() => setShowForgot(true)}
+        >
           Forgot Password?
         </Text>
       </View>
+
       <Modal visible={showForgot} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.forgotModal}>
-            <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Enter your email:</Text>
+            <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>
+              Enter your email:
+            </Text>
             <TextInput
               style={styles.input}
               placeholder="Email"
@@ -134,7 +154,10 @@ const LoginSignupScreen = () => {
               keyboardType="email-address"
             />
             <Button title="Send Reset Link" onPress={handleForgotPassword} />
-            <TouchableOpacity onPress={() => setShowForgot(false)} style={{ marginTop: 12 }}>
+            <TouchableOpacity
+              onPress={() => setShowForgot(false)}
+              style={{ marginTop: 12 }}
+            >
               <Text style={{ color: '#0a662e' }}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -169,11 +192,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#f9f9f9',
   },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderColor: '#0a662e',
+    borderWidth: 1,
+    borderRadius: 8,
+    backgroundColor: '#f9f9f9',
+    paddingHorizontal: 12,
+    width: 280,
+    height: 48,
+    marginBottom: 16,
+  },
+  passwordInput: {
+    flex: 1,
+    fontSize: 16,
+  },
+  showHideText: {
+    color: '#0a662e',
+    fontWeight: 'bold',
+    paddingHorizontal: 8,
+  },
   buttonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: 280,
     marginTop: 8,
+  },
+  forgotText: {
+    color: '#0a662e',
+    textDecorationLine: 'underline',
   },
   modalOverlay: {
     flex: 1,

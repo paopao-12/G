@@ -18,7 +18,8 @@ import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MapView, { Marker, PROVIDER_DEFAULT, Polyline } from 'react-native-maps';
-import api, { Route, Stop, FareInfo, RouteFilter, calculateDistance, WalkingDirections } from '../services/api';
+import api, { Route, FareInfo, RouteFilter } from '../services/api';
+import { BUS_STOPS } from '../busStops';
 import { RootStackParamList } from '../types/navigation';
 import { RouteSuggestion, LocationOption, PassengerType } from '../types';
 import { MaterialIcons, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -48,10 +49,7 @@ type SelectionMode = 'none' | 'origin' | 'destination';
 
 const HomeScreen = () => {
   const [routes, setRoutes] = useState<Route[]>([]);
-  const [stops, setStops] = useState<Stop[]>([]);
   const [selectedRoute, setSelectedRoute] = useState<number | null>(null);
-  const [originStop, setOriginStop] = useState<number | null>(null);
-  const [destinationStop, setDestinationStop] = useState<number | null>(null);
   const [passengerType, setPassengerType] = useState<PassengerType>('regular');
   const [fareInfo, setFareInfo] = useState<FareInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,22 +61,10 @@ const HomeScreen = () => {
     accessibility: false,
     maxDistance: 500, // meters
   });
-  const [nearestStops, setNearestStops] = useState<Stop[]>([]);
+ 
   const [locationLoading, setLocationLoading] = useState(false);
-  const [showMap, setShowMap] = useState(false);
-  const [walkingDirections, setWalkingDirections] = useState<any[]>([]);
   const mapRef = useRef<MapView>(null);
-  const [selectedStop, setSelectedStop] = useState<Stop | null>(null);
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const [suggestedRoutes, setSuggestedRoutes] = useState<RouteSuggestion[]>([]);
-  const [showDestinationPickerModal, setShowDestinationPickerModal] = useState(false);
-  const [destinationSearchText, setDestinationSearchText] = useState('');
-  const [filteredStops, setFilteredStops] = useState<Stop[]>([]);
-  const [showOriginPickerModal, setShowOriginPickerModal] = useState(false);
-  const [originSearchText, setOriginSearchText] = useState('');
-  const [filteredOriginStops, setFilteredOriginStops] = useState<Stop[]>([]);
-  const [selectionMode, setSelectionMode] = useState<SelectionMode>('none');
-  const [mapStops, setMapStops] = useState<Stop[]>([]);
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const translateY = useSharedValue(SNAP_POINTS[1]); // Start half-open
@@ -120,36 +106,10 @@ const HomeScreen = () => {
 
   useEffect(() => {
     loadData();
-    requestLocationPermission();
-    setShowMap(false); // Ensure map modal is closed on initial load
-    setSelectedStop(null); // Clear any selected stop on initial load
+   
   }, []);
 
-  useEffect(() => {
-    // Filter stops based on search text for destination
-    if (destinationSearchText) {
-      const lowercasedQuery = destinationSearchText.toLowerCase();
-      const filtered = stops.filter(stop =>
-        stop.name.toLowerCase().includes(lowercasedQuery)
-      );
-      setFilteredStops(filtered);
-    } else {
-      setFilteredStops(stops);
-    }
-  }, [destinationSearchText, stops]);
 
-  useEffect(() => {
-    // Filter stops based on search text for origin
-    if (originSearchText) {
-      const lowercasedQuery = originSearchText.toLowerCase();
-      const filtered = stops.filter(stop =>
-        stop.name.toLowerCase().includes(lowercasedQuery)
-      );
-      setFilteredOriginStops(filtered);
-    } else {
-      setFilteredOriginStops(stops);
-    }
-  }, [originSearchText, stops]);
 
   useEffect(() => {
     // Fetch user role from AsyncStorage
@@ -158,273 +118,29 @@ const HomeScreen = () => {
     });
   }, []);
 
-  const requestLocationPermission = async () => {
-    try {
-      setLocationLoading(true);
-      // Request permission using Expo Location
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permission is required to find nearby stops.');
-        setLocationLoading(false);
-        return;
-      }
-      // Get current position
-      const position = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      setUserLocation(position);
-      // Find nearest stops
-      api.findNearestStops({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-      }, 500).then((nearest) => {
-        setNearestStops(nearest.map(ns => ns.stop));
-        if (nearest.length > 0) {
-          setOriginStop(nearest[0].stop.id);
-          setOriginSearchText(nearest[0].stop.name);
-        }
-      });
-    } catch (error) {
-      console.error('Error getting location:', error);
-      Alert.alert('Error', 'Failed to get your current location');
-    } finally {
-      setLocationLoading(false);
-    }
-  };
-
-  // Refactored handleUseCurrentLocation to open OriginPickerModal
-  const handleOriginLocationSelection = async () => {
-    setShowOriginPickerModal(true);
-    setShowMap(false); // Ensure MapModal is closed when opening OriginPickerModal
-    // Attempt to find nearest stop on opening the modal for automatic pre-selection
-    if (!userLocation) {
-      await requestLocationPermission();
-    }
-  };
+  
 
   const loadData = async () => {
     try {
       setLoading(true);
-      
-      // Get user location first
-      if (userLocation) {
-        const { latitude, longitude } = userLocation.coords;
-        const routesResponse = await api.getRoutes(latitude, longitude);
-        setRoutes(routesResponse);
-      } else {
-        // If no location available, get all routes
-        const routesResponse = await api.getRoutes();
-        setRoutes(routesResponse);
-      }
-
-      // Get all stops for the dropdowns and map
-      const stopsResponse = await api.getStops();
-      setStops(stopsResponse);
-      setMapStops(stopsResponse); // Set stops for map display
+      const routesResponse = await api.getRoutes();
+      setRoutes(routesResponse);
     } catch (error) {
       console.error('Error loading data:', error);
-      Alert.alert('Error', 'Failed to load routes and stops');
+      Alert.alert('Error', 'Failed to load routes');
     } finally {
       setLoading(false);
     }
   };
 
-  // Update loadData when user location changes
+  
   useEffect(() => {
     if (userLocation) {
       loadData();
     }
   }, [userLocation]);
 
-  const handleCalculateFare = async () => {
-    if (!originStop || !destinationStop) {
-      Alert.alert('Error', 'Please select both origin and destination stops');
-      return;
-    }
 
-    try {
-      setCalculating(true);
-      
-      // Find the selected origin and destination stop objects
-      const originStopObj = stops.find(stop => stop.id === originStop);
-      const destinationStopObj = stops.find(stop => stop.id === destinationStop);
-
-      if (!originStopObj || !destinationStopObj) {
-        Alert.alert('Error', 'Could not find selected origin or destination stop details.');
-        setCalculating(false);
-        return;
-      }
-
-      // Get route suggestions with filters
-      const suggestions = await api.getRouteSuggestions(
-        { latitude: originStopObj.latitude, longitude: originStopObj.longitude },
-        { latitude: destinationStopObj.latitude, longitude: destinationStopObj.longitude },
-        filters
-      );
-
-      // Handle new backend response types
-      if (suggestions.length === 1 && suggestions[0].type === 'walk') {
-        Alert.alert('Walking Only', suggestions[0].message);
-        setSuggestedRoutes([]);
-        setCalculating(false);
-        return;
-      } else if (suggestions.length === 1 && suggestions[0].type === 'none') {
-        Alert.alert('No Routes', suggestions[0].message);
-        setSuggestedRoutes([]);
-        setCalculating(false);
-        return;
-      } else if (suggestions.length === 1 && suggestions[0].type === 'direct') {
-        // Format direct route for UI
-        const s = suggestions[0];
-        setSuggestedRoutes([
-          {
-            id: `${s.route_id}-${s.origin_stop.stop_id}-${s.destination_stop.stop_id}`,
-            route: { id: s.route_id, name: s.route_id, stops: [], path: [] }, // You can fetch more route details if needed
-            originStop: s.origin_stop,
-            destinationStop: s.destination_stop,
-            estimatedFare: 0,
-            distance: 0,
-            duration: 0,
-            accessibilityScore: undefined, // was null
-            trafficLevel: undefined, // was null
-            from: {
-              id: s.origin_stop.stop_id,
-              name: s.origin_stop.stop_name,
-              latitude: s.origin_stop.latitude,
-              longitude: s.origin_stop.longitude,
-            },
-            to: {
-              id: s.destination_stop.stop_id,
-              name: s.destination_stop.stop_name,
-              latitude: s.destination_stop.latitude,
-              longitude: s.destination_stop.longitude,
-            },
-            estimatedTime: 0,
-            type: 'jeepney',
-            stops: [],
-            routeName: s.route_id,
-            segments: [],
-          },
-        ]);
-        setCalculating(false);
-        return;
-      } else if (suggestions.length === 1 && suggestions[0].type === 'transfer') {
-        // Format transfer route for UI
-        const s = suggestions[0];
-        setSuggestedRoutes([
-          {
-            id: `${s.origin_route}-${s.transfer_stop.stop_id}-${s.destination_route}`,
-            route: { id: s.origin_route, name: s.origin_route, stops: [], path: [] },
-            originStop: s.origin_stop,
-            destinationStop: s.destination_stop,
-            estimatedFare: 0,
-            distance: 0,
-            duration: 0,
-            accessibilityScore: undefined, // was null
-            trafficLevel: undefined, // was null
-            from: {
-              id: s.origin_stop.stop_id,
-              name: s.origin_stop.stop_name,
-              latitude: s.origin_stop.latitude,
-              longitude: s.origin_stop.longitude,
-            },
-            to: {
-              id: s.destination_stop.stop_id,
-              name: s.destination_stop.stop_name,
-              latitude: s.destination_stop.latitude,
-              longitude: s.destination_stop.longitude,
-            },
-            estimatedTime: 0,
-            type: 'jeepney', // fallback to 'jeepney' for main type
-            stops: [],
-            routeName: `${s.origin_route} → ${s.destination_route}`,
-            segments: [
-              {
-                type: 'jeepney',
-                instructions: `Take ${s.origin_route} to transfer stop`,
-                distance: 0,
-                duration: 0,
-                path: [],
-              },
-              {
-                type: 'transfer',
-                instructions: `Transfer at ${s.transfer_stop.stop_name}`,
-                distance: 0,
-                duration: 0,
-                path: [],
-              },
-              {
-                type: 'jeepney',
-                instructions: `Take ${s.destination_route} to destination`,
-                distance: 0,
-                duration: 0,
-                path: [],
-              },
-            ],
-          },
-        ]);
-        setCalculating(false);
-        return;
-      }
-
-      // Convert suggestions to the expected format
-      const formattedSuggestions = suggestions.map(suggestion => ({
-        id: `${suggestion.route.id}-${suggestion.originStop.stop_id}-${suggestion.destinationStop.stop_id}`,
-        route: suggestion.route,
-        originStop: suggestion.originStop,
-        destinationStop: suggestion.destinationStop,
-        estimatedFare: suggestion.estimatedFare,
-        distance: suggestion.distance,
-        duration: suggestion.duration,
-        accessibilityScore: suggestion.accessibilityScore,
-        trafficLevel: suggestion.trafficLevel,
-        from: {
-          id: suggestion.originStop.stop_id.toString(),
-          name: suggestion.originStop.stop_name,
-          latitude: suggestion.originStop.latitude,
-          longitude: suggestion.originStop.longitude,
-        },
-        to: {
-          id: suggestion.destinationStop.stop_id.toString(),
-          name: suggestion.destinationStop.stop_name,
-          latitude: suggestion.destinationStop.latitude,
-          longitude: suggestion.destinationStop.longitude,
-        },
-        estimatedTime: suggestion.duration,
-        type: 'jeepney' as const,
-        stops: (suggestion.route.stops || []).map((stop: any) => ({
-          id: stop.stop_id.toString(),
-          name: stop.stop_name,
-          latitude: stop.latitude,
-          longitude: stop.longitude,
-        })),
-        routeName: suggestion.route.name,
-        segments: suggestion.segments,
-      }));
-
-      setSuggestedRoutes(formattedSuggestions);
-      translateY.value = withSpring(SNAP_POINTS[0]); // Fully open the panel to show results
-
-      // Fit map to show the entire route
-      if (formattedSuggestions.length > 0) {
-        const firstRoute = formattedSuggestions[0];
-        const coordinates = [
-          { latitude: firstRoute.from.latitude, longitude: firstRoute.from.longitude },
-          { latitude: firstRoute.to.latitude, longitude: firstRoute.to.longitude },
-          ...firstRoute.route.path
-        ];
-        
-        mapRef.current?.fitToCoordinates(coordinates, {
-          edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-          animated: true,
-      });
-      }
-
-    } catch (error) {
-      Alert.alert('Error', 'Failed to calculate route');
-      console.error(error);
-    } finally {
-      setCalculating(false);
-    }
-  };
 
   const getDiscountedFare = (fare: number, type: PassengerType) => {
     switch (type) {
@@ -445,254 +161,7 @@ const HomeScreen = () => {
     }));
   };
 
-  const getWalkingDirections = async (destination: Stop) => {
-    if (!userLocation) return;
-
-    try {
-      const directions = await api.getWalkingDirections(
-        { latitude: userLocation.coords.latitude, longitude: userLocation.coords.longitude },
-        { latitude: destination.latitude, longitude: destination.longitude }
-      );
-      setWalkingDirections(directions.coordinates);
-      mapRef.current?.fitToCoordinates(directions.coordinates, {
-        edgePadding: { top: 50, right: 50, bottom: 50, left: 50 },
-        animated: true,
-      });
-    } catch (error) {
-      console.error('Error getting walking directions:', error);
-      Alert.alert('Error', 'Failed to get walking directions');
-      setWalkingDirections([]);
-    }
-  };
-
-  const MapModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={showMap}
-      onRequestClose={() => {
-        setShowMap(false);
-        setSelectedStop(null); // Clear selected stop when MapModal is closed
-      }}
-    >
-      <View style={styles.modalOverlay}>
-      <View style={styles.modalContainer}>
-          <TouchableOpacity style={styles.closeButton} onPress={() => {
-            setShowMap(false);
-            setSelectedStop(null); // Clear selected stop when MapModal is closed via button
-          }}>
-            <MaterialIcons name="close" size={24} color="#333" />
-          </TouchableOpacity>
-        <MapView
-          ref={mapRef}
-            style={styles.fullMap}
-          provider={PROVIDER_DEFAULT}
-            initialRegion={userLocation ? {
-              latitude: userLocation.coords.latitude,
-              longitude: userLocation.coords.longitude,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            } : undefined}
-        >
-          {userLocation && (
-            <Marker
-              coordinate={{
-                latitude: userLocation.coords.latitude,
-                longitude: userLocation.coords.longitude,
-              }}
-              title="Your Location"
-              pinColor="blue"
-            />
-          )}
-            {selectedStop && (
-            <Marker
-              coordinate={{
-                  latitude: selectedStop.latitude,
-                  longitude: selectedStop.longitude,
-              }}
-                title={selectedStop.name}
-                pinColor="red"
-            />
-            )}
-          {walkingDirections.length > 0 && (
-            <Polyline
-              coordinates={walkingDirections}
-              strokeWidth={4}
-                strokeColor="blue"
-            />
-          )}
-        </MapView>
-        {selectedStop && (
-            <TouchableOpacity style={styles.directionsButton} onPress={() => getWalkingDirections(selectedStop)}>
-              <Text style={styles.directionsButtonText}>Get Directions to {selectedStop.name}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    </Modal>
-  );
-
-  const DestinationPickerModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={showDestinationPickerModal}
-      onRequestClose={() => {
-        setShowDestinationPickerModal(false);
-        setShowMap(false); // Ensure MapModal is closed on request close
-      }}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.destinationPickerModalContainer} pointerEvents="auto">
-          <TextInput
-            style={styles.destinationSearchInput}
-            placeholder="Search destination stop"
-            placeholderTextColor="#888"
-            value={destinationSearchText}
-            onChangeText={setDestinationSearchText}
-            autoFocus={true}
-          />
-          <TouchableOpacity style={styles.modalActionButton} onPress={async () => {
-            if (!userLocation) await requestLocationPermission();
-            if (nearestStops.length > 0) {
-              setDestinationStop(nearestStops[0].id);
-              setDestinationSearchText(nearestStops[0].name);
-              setShowDestinationPickerModal(false);
-            } else {
-              Alert.alert('No Nearby Stops', 'No jeepney stops found within 500 meters of your location.');
-            }
-          }}>
-            <Text style={styles.modalActionButtonText}>Use My Current Location</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.modalActionButton} onPress={() => {
-            setShowDestinationPickerModal(false);
-            setSelectionMode('destination');
-          }}>
-            <Text style={styles.modalActionButtonText}>Pick on Map</Text>
-          </TouchableOpacity>
-          <FlatList
-            data={filteredStops}
-            keyExtractor={(item) => item.id.toString()}
-            keyboardShouldPersistTaps="always"
-            renderItem={({ item }) => (
-            <TouchableOpacity
-                style={styles.stopListItem}
-              onPress={() => {
-                  setDestinationStop(item.id);
-                  setDestinationSearchText(item.name);
-                  setShowDestinationPickerModal(false);
-                  setShowMap(false); // Ensure MapModal is closed after selection
-              }}
-            >
-                <Text style={styles.stopListItemText}>{item.name}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <TouchableOpacity
-            style={styles.closeModalButton}
-            onPress={() => {
-              setShowDestinationPickerModal(false);
-              setShowMap(false); // Ensure MapModal is closed on cancel
-            }}
-          >
-            <Text style={styles.closeModalButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
-      </View>
-    </Modal>
-  );
-
-  const OriginPickerModal = () => (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={showOriginPickerModal}
-      onRequestClose={() => {
-        setShowOriginPickerModal(false);
-        setShowMap(false); // Ensure MapModal is closed on request close
-      }}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.destinationPickerModalContainer} pointerEvents="auto">
-          <TextInput
-            style={styles.destinationSearchInput}
-            placeholder="Search origin stop"
-            placeholderTextColor="#888"
-            value={originSearchText}
-            onChangeText={setOriginSearchText}
-            autoFocus={true}
-          />
-          <TouchableOpacity style={styles.modalActionButton} onPress={handleUseCurrentLocation}>
-            <Text style={styles.modalActionButtonText}>Use My Current Location</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.modalActionButton} onPress={() => {
-            setShowOriginPickerModal(false);
-            setSelectionMode('origin');
-          }}>
-            <Text style={styles.modalActionButtonText}>Pick on Map</Text>
-          </TouchableOpacity>
-          <FlatList
-            data={filteredOriginStops}
-            keyExtractor={(item) => item.id.toString()}
-            keyboardShouldPersistTaps="always"
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.stopListItem}
-                onPress={() => {
-                  setOriginStop(item.id);
-                  setOriginSearchText(item.name);
-                  setShowOriginPickerModal(false);
-                  setShowMap(false); // Ensure MapModal is closed after selection
-                }}
-              >
-                <Text style={styles.stopListItemText}>{item.name}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <TouchableOpacity
-            style={styles.closeModalButton}
-            onPress={() => {
-              setShowOriginPickerModal(false);
-              setShowMap(false); // Ensure MapModal is closed on cancel
-            }}
-          >
-            <Text style={styles.closeModalButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-
-  const handleStopPress = (stop: Stop) => {
-    if (selectionMode === 'origin') {
-      setOriginStop(stop.id);
-      setOriginSearchText(stop.name);
-      setSelectionMode('none');
-    } else if (selectionMode === 'destination') {
-      setDestinationStop(stop.id);
-      setDestinationSearchText(stop.name);
-      setSelectionMode('none');
-    }
-  };
-
-  const handleUseCurrentLocation = async () => {
-    if (!userLocation) {
-      await requestLocationPermission();
-      return;
-    }
-
-    if (nearestStops.length > 0) {
-      setOriginStop(nearestStops[0].id);
-      setOriginSearchText(nearestStops[0].name);
-      setSelectionMode('none');
-    } else {
-      Alert.alert(
-        'No Nearby Stops',
-        'No jeepney stops found within 500 meters of your location.'
-      );
-    }
-  };
-
+  
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -700,11 +169,6 @@ const HomeScreen = () => {
       </View>
     );
   }
-
-  const selectedOriginStopName = stops.find(stop => stop.id === originStop)?.name || (
-    locationLoading ? 'Detecting location...' : 'Select Origin'
-  );
-  const selectedDestinationStopName = stops.find(stop => stop.id === destinationStop)?.name || 'Select Destination';
 
   return (
     <View style={styles.mainContainer}>
@@ -717,9 +181,8 @@ const HomeScreen = () => {
           <Ionicons name="search" size={20} color="#888" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search routes or destinations"
-            placeholderTextColor="#888"
-          />
+            placeholder="Search routes"
+            placeholderTextColor="#888" />
         </View>
         <TouchableOpacity style={styles.menuIcon}>
           <MaterialIcons name="menu" size={24} color="#333" />
@@ -734,7 +197,19 @@ const HomeScreen = () => {
         )}
       </View>
 
-      {/* Map View */}
+      {/* Button to go to Route Suggest Screen - fixed at bottom center */}
+      <View style={styles.routeSuggestButtonContainer}>
+        <TouchableOpacity
+          style={styles.routeSuggestButton}
+          onPress={() => navigation.navigate('RouteSuggest')}
+        >
+          <Text style={styles.routeSuggestButtonText}>
+            ASA TA G!
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Map View: BUS_STOPS and GTFS polylines rendered here. */}
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -756,185 +231,30 @@ const HomeScreen = () => {
             pinColor="blue"
           />
         )}
-        {/* Always render stop markers */}
-        {(() => { console.log('mapStops:', mapStops); return null; })()}
-        {mapStops.map(stop => (
+        {/* Render static bus stops */}
+        {BUS_STOPS.map((stop, idx) => (
           <Marker
-            key={stop.id}
-            coordinate={{
-              latitude: stop.latitude,
-              longitude: stop.longitude,
-            }}
+            key={`busstop-${idx}`}
+            coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
             title={stop.name}
-            pinColor={
-              stop.id === originStop
-                ? '#0a662e' // Green for origin
-                : stop.id === destinationStop
-                ? '#e74c3c' // Red for destination
-                : '#666' // Gray for other stops
-            }
-            onPress={() => handleStopPress(stop)}
-          />
+          >
+            <View style={{backgroundColor:'#0a662e',borderRadius:8,padding:4}}>
+              <Text style={{color:'#fff',fontWeight:'bold',fontSize:10}}>{stop.name}</Text>
+            </View>
+          </Marker>
         ))}
-        {suggestedRoutes.length > 0 && suggestedRoutes[0].segments.map((segment, index) => (
-            <Polyline
-            key={`selected-route-${segment.type}-${index}`}
-              coordinates={segment.path}
-              strokeWidth={4}
-            strokeColor={segment.type === 'walking' ? '#4285F4' : '#F4B400'}
-              lineCap="round"
-              lineJoin="round"
-            />
+        {/* Render GTFS route polylines */}
+        {routes.map((route, idx) => (
+          <Polyline
+            key={`route-polyline-${route.route_id}`}
+            coordinates={route.polyline}
+            strokeColor={'#F4B400'}
+            strokeWidth={4}
+            lineCap="round"
+            lineJoin="round"
+          />
         ))}
       </MapView>
-
-      {/* Selection Mode Indicator */}
-      {selectionMode !== 'none' && (
-        <View style={styles.selectionModeIndicator}>
-          <Text style={styles.selectionModeText}>
-            {selectionMode === 'origin' ? 'Select Origin Stop' : 'Select Destination Stop'}
-          </Text>
-          <TouchableOpacity
-            style={styles.cancelSelectionButton}
-            onPress={() => setSelectionMode('none')}
-          >
-            <Text style={styles.cancelSelectionText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {/* Bottom Sheet Panel */}
-      <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View style={[styles.bottomSheet, rBottomSheetStyle]}>
-          <View style={styles.handleBar} />
-
-          {suggestedRoutes.length === 0 ? (
-            <ScrollView contentContainerStyle={styles.panelContent}>
-              <Text style={styles.panelTitle}>Asa ta G?</Text>
-
-              <TouchableOpacity
-                style={styles.inputField}
-                onPress={() => {
-                  setSelectionMode('origin');
-                  setShowMap(false);
-                }}
-              >
-                <MaterialIcons name="my-location" size={20} color="#0a662e" />
-                <Text style={styles.inputFieldText}>{selectedOriginStopName}</Text>
-                {locationLoading && <ActivityIndicator size="small" color="#0a662e" style={{ marginLeft: 10 }} />} 
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.inputField}
-                onPress={() => {
-                  setSelectionMode('destination');
-                  setShowMap(false);
-                }}
-              >
-                <MaterialIcons name="location-on" size={20} color="#e74c3c" />
-                <Text style={styles.inputFieldText}>{selectedDestinationStopName}</Text>
-              </TouchableOpacity>
-
-              {/* Filters */}
-      <View style={styles.filtersContainer}>
-        <Text style={styles.sectionTitle}>Smart Filters</Text>
-        <View style={styles.filterRow}>
-          <Text style={styles.filterLabel}>Traffic-Aware Routing</Text>
-          <Switch
-            value={filters.trafficAware}
-            onValueChange={() => toggleFilter('trafficAware')}
-                    trackColor={{ false: '#767577', true: '#81b0ff' }}
-                    thumbColor={filters.trafficAware ? '#f5dd4b' : '#f4f3f4'}
-          />
-        </View>
-        <View style={styles.filterRow}>
-          <Text style={styles.filterLabel}>Time-Based Adjustments</Text>
-          <Switch
-            value={filters.timeOfDay}
-            onValueChange={() => toggleFilter('timeOfDay')}
-                    trackColor={{ false: '#767577', true: '#81b0ff' }}
-                    thumbColor={filters.timeOfDay ? '#f5dd4b' : '#f4f3f4'}
-          />
-        </View>
-        <View style={styles.filterRow}>
-          <Text style={styles.filterLabel}>Accessibility Features</Text>
-          <Switch
-            value={filters.accessibility}
-            onValueChange={() => toggleFilter('accessibility')}
-                    trackColor={{ false: '#767577', true: '#81b0ff' }}
-                    thumbColor={filters.accessibility ? '#f5dd4b' : '#f4f3f4'}
-          />
-        </View>
-      </View>
-
-              {/* Passenger Type Picker */}
-        <View style={styles.pickerContainer}>
-        <Text style={styles.sectionTitle}>Passenger Type</Text>
-          <Picker
-            selectedValue={passengerType}
-            onValueChange={(value) => setPassengerType(value as PassengerType)}
-            style={styles.picker}
-          >
-            <Picker.Item label="Regular" value="regular" />
-            <Picker.Item label="Student" value="student" />
-            <Picker.Item label="Senior Citizen" value="senior" />
-            <Picker.Item label="PWD" value="pwd" />
-          </Picker>
-      </View>
-
-      <TouchableOpacity
-        style={[styles.button, calculating && styles.buttonDisabled]}
-        onPress={handleCalculateFare}
-        disabled={calculating}
-      >
-        {calculating ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Find Route</Text>
-        )}
-      </TouchableOpacity>
-            </ScrollView>
-          ) : (
-            <ScrollView contentContainerStyle={styles.panelContent}>
-              <TouchableOpacity style={styles.backButton} onPress={() => setSuggestedRoutes([])}>
-                <MaterialIcons name="arrow-back" size={24} color="#0a662e" />
-                <Text style={styles.backButtonText}>Suggested Routes</Text>
-              </TouchableOpacity>
-
-              {suggestedRoutes.map((suggestion, index) => (
-                <TouchableOpacity
-                  key={suggestion.id}
-                  style={styles.routeCard}
-                  onPress={() => navigation.navigate('RouteDetails', { route: suggestion, passengerType: passengerType })} 
-                >
-                  <View style={styles.routeCardHeader}>
-                    <Text style={styles.routeCardFare}>P {getDiscountedFare(suggestion.estimatedFare, passengerType).toFixed(2)}</Text>
-                    <Text style={styles.routeCardTime}>{Math.round(suggestion.duration / 60)} min</Text>
-        </View>
-                  <View style={styles.routeCardBody}>
-                    <Text style={styles.routeCardName}>{suggestion.routeName}</Text>
-                    <Text style={styles.routeCardDetails}>P {suggestion.estimatedFare.toFixed(2)}</Text>
-                    <Text style={styles.routeCardDetails}>{Math.round(suggestion.duration / 60)} min</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-        </Animated.View>
-      </PanGestureHandler>
-
-      <MapModal />
-      <DestinationPickerModal />
-      <OriginPickerModal />
-
-      {/* Selection Mode Indicator Overlay */}
-      {selectionMode !== 'none' && (
-        <View style={styles.selectionModeIndicatorOverlay} pointerEvents="box-none">
-          <Text style={styles.selectionModeTextOverlay}>
-            {selectionMode === 'origin' ? 'Tap a stop on the map to select as Origin' : 'Tap a stop on the map to select as Destination'}
-          </Text>
-        </View>
-      )}
     </View>
   );
 };
@@ -964,6 +284,33 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 5,
+  },
+  routeSuggestButtonContainer: {
+    position: 'absolute',
+    bottom: 32,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  routeSuggestButton: {
+    backgroundColor: '#0a662e',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  routeSuggestButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    letterSpacing: 1,
   },
   logoContainer: {
     backgroundColor: '#0a662e', // Dark green

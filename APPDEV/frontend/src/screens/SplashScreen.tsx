@@ -8,7 +8,7 @@ const SplashScreen = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.dispatch(StackActions.replace('LoginSignup'));
-    }, 2000); // Show splash for 2 seconds
+    }, 3000); // 3 seconds splash
     return () => clearTimeout(timer);
   }, [navigation]);
 
@@ -30,10 +30,11 @@ const styles = StyleSheet.create({
     fontSize: 96,
     fontWeight: 'bold',
     color: '#fff',
-    textShadowColor: '#0a662e',
-    textShadowOffset: { width: 4, height: 4 },
+    textShadowColor: '#00000066',
+    textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 6,
     textAlign: 'center',
+    fontFamily: 'sans-serif-condensed',
   },
 });
 

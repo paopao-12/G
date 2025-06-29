@@ -7,7 +7,7 @@ import * as Location from 'expo-location';
 
 
 const API_URL = Platform.select({
-    android: 'http://192.168.254.106:4000/api/transport', // For Android Emulator
+    android: 'http://192.168.254.108:4000/api/transport', // For Android Emulator
     ios: 'http://localhost:4000/api/transport', // For iOS Simulator
     default: 'http://localhost:4000/api/transport',
 });
@@ -24,42 +24,6 @@ const STORAGE_KEYS = {
 const CACHE_EXPIRATION = 24 * 60 * 60 * 1000;
 
 
-const MOCK_DATA = {
-    routes: [
-        {
-            id: 1,
-            name: "Route 1: Bangkal - Roxas",
-            stops: [
-                { stop_id: 1, stop_name: "DXSS (Bangkal)", sequence: 1, latitude: 7.0722, longitude: 125.6131 },
-                { stop_id: 2, stop_name: "Roxas Avenue", sequence: 2, latitude: 7.0744, longitude: 125.6155 },
-                { stop_id: 3, stop_name: "SM City Davao", sequence: 3, latitude: 7.0733, longitude: 125.6144 },
-            ],
-            jeepneyCount: 5,
-            operatingHours: "6:00 AM - 9:00 PM",
-            fare: 10
-        },
-        {
-            id: 2,
-            name: "Route 2: Matina - Ecoland",
-            stops: [
-                { stop_id: 4, stop_name: "Matina Crossing", sequence: 1, latitude: 7.0822, longitude: 125.6231 },
-                { stop_id: 5, stop_name: "Ecoland Terminal Crossing", sequence: 2, latitude: 7.0833, longitude: 125.6244 },
-                { stop_id: 6, stop_name: "Victoria Plaza", sequence: 3, latitude: 7.0833, longitude: 125.6244 },
-            ],
-            jeepneyCount: 4,
-            operatingHours: "5:30 AM - 10:00 PM",
-            fare: 12
-        }
-    ],
-    stops: [
-        { id: 1, name: "DXSS (Bangkal)", latitude: 7.0722, longitude: 125.6131 },
-        { id: 2, name: "Roxas Avenue", latitude: 7.0744, longitude: 125.6155 },
-        { id: 3, name: "SM City Davao", latitude: 7.0733, longitude: 125.6144 },
-        { id: 4, name: "Matina Crossing", latitude: 7.0822, longitude: 125.6231 },
-        { id: 5, name: "Ecoland Terminal Crossing", latitude: 7.0833, longitude: 125.6244 },
-        { id: 6, name: "Victoria Plaza", latitude: 7.0833, longitude: 125.6244 },
-    ]
-};
 
 const axiosInstance = axios.create({
     baseURL: API_URL,
@@ -190,14 +154,14 @@ export interface RouteStop {
     accessibility?: number;
 }
 
+// GTFS-based Route interface for polylines
 export interface Route {
-    id: number;
-    name: string;
-    stops: RouteStop[];
-    jeepneyCount: number;
-    operatingHours: string;
-    fare: number;
-    path: Array<{ latitude: number; longitude: number }>;
+    route_id: string;
+    route_short_name: string;
+    route_long_name: string;
+    route_type: string;
+    route_color: string;
+    polyline: Array<{ latitude: number; longitude: number }>;
 }
 
 export interface FareInfo {
@@ -424,13 +388,10 @@ const testBackendConnection = async (): Promise<boolean> => {
 
 const api = {
  
-    getRoutes: async (latitude?: number, longitude?: number): Promise<Route[]> => {
+    // Get all routes with polylines from backend GTFS
+    getRoutes: async (): Promise<Route[]> => {
         try {
-            let url = `${API_URL}/routes`;
-            if (latitude && longitude) {
-                url += `?latitude=${latitude}&longitude=${longitude}`;
-            }
-            const response = await fetch(url);
+            const response = await fetch(`${API_URL}/routes`);
             if (!response.ok) {
                 throw new Error('Failed to fetch routes');
             }
@@ -457,23 +418,16 @@ const api = {
                 const stops = await retryRequest(() => 
                     axiosInstance.get('/stops').then(res => res.data)
                 );
-                
-               
                 await cacheData(STORAGE_KEYS.STOPS, stops);
                 await updateLastSync();
-                
                 return stops;
             } catch (error) {
-             
                 const cachedStops = await getCachedData<Stop[]>(STORAGE_KEYS.STOPS);
                 if (cachedStops) {
                     console.log('Network error, using cached stops data');
                     return cachedStops;
                 }
-                
-            
-                console.log('No cached data, using mock stops data');
-                return MOCK_DATA.stops;
+                throw new Error('Failed to fetch stops and no cached data available');
             }
         } catch (error) {
             console.error('Error fetching stops:', error);
@@ -504,47 +458,9 @@ const api = {
     },
 
     
-    getRouteDetails: async (routeId: number): Promise<Route> => {
-        try {
-            
-            const cachedRoutes = await getCachedData<Route[]>(STORAGE_KEYS.ROUTES);
-            const cacheValid = await isCacheValid();
-
-            if (cachedRoutes && cacheValid) {
-                const cachedRoute = cachedRoutes.find(r => r.id === routeId);
-                if (cachedRoute) {
-                    console.log('Using cached route details');
-                    return cachedRoute;
-                }
-            }
-
-          
-            const route = await retryRequest(() => 
-                axiosInstance.get(`/routes/${routeId}`).then(res => res.data)
-            );
-            
-            
-            if (cachedRoutes) {
-                const updatedRoutes = cachedRoutes.map(r => 
-                    r.id === routeId ? route : r
-                );
-                await cacheData(STORAGE_KEYS.ROUTES, updatedRoutes);
-                await updateLastSync();
-            }
-            
-            return route;
-        } catch (error) {
-            
-            const cachedRoutes = await getCachedData<Route[]>(STORAGE_KEYS.ROUTES);
-            if (cachedRoutes) {
-                const cachedRoute = cachedRoutes.find(r => r.id === routeId);
-                if (cachedRoute) {
-                    console.log('Network error, using cached route details');
-                    return cachedRoute;
-                }
-            }
-            return handleError(error, 'fetch route details');
-        }
+    // getRouteDetails is not supported for GTFS-based routes (no stops, only polylines)
+    getRouteDetails: async (_routeId: string): Promise<Route | null> => {
+        return null;
     },
 
     
@@ -651,8 +567,9 @@ const api = {
 
   
     getRouteMapRegion: (route: Route): MapRegion => {
-        const latitudes = route.stops.map(stop => stop.latitude);
-        const longitudes = route.stops.map(stop => stop.longitude);
+        // Use polyline for region calculation
+        const latitudes = route.polyline.map(pt => pt.latitude);
+        const longitudes = route.polyline.map(pt => pt.longitude);
 
         const minLat = Math.min(...latitudes);
         const maxLat = Math.max(...latitudes);
@@ -762,19 +679,9 @@ const api = {
         }
     },
 
-    getNearbyStops: async (latitude: number, longitude: number, radius: number = 1): Promise<Stop[]> => {
-        try {
-            const response = await fetch(
-                `${API_URL}/stops/nearby?latitude=${latitude}&longitude=${longitude}&radius=${radius}`
-            );
-            if (!response.ok) {
-                throw new Error('Failed to fetch nearby stops');
-            }
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching nearby stops:', error);
-            throw error;
-        }
+    // No longer fetches stops from backend, returns empty array
+    getNearbyStops: async (_latitude: number, _longitude: number, _radius: number = 1): Promise<Stop[]> => {
+        return [];
     },
 
     getWalkingDirections: async (origin: { latitude: number; longitude: number }, destination: { latitude: number; longitude: number }): Promise<WalkingDirections> => {

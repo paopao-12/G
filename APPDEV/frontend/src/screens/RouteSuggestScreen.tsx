@@ -1,112 +1,98 @@
 import React, { useState } from 'react';
-import { View, Text, Button, StyleSheet, Alert } from 'react-native';
-import MapView, { Marker, Polyline, MapPressEvent, LatLng } from 'react-native-maps';
-import axios from 'axios';
-
-type Suggestion = {
-  type: string;
-  route_id?: string;
-  message?: string;
+import { View, Text, Button, StyleSheet, TextInput, Alert } from 'react-native';
+import * as Location from 'expo-location';
+import { suggestRoutes, LatLng } from '../utils/smartRouteSuggest';
+type ShapeWithName = {
+  route_short_name: string;
+  route_long_name: string;
+  shape: { lat: number; lon: number }[];
 };
+const shapesWithNames: Record<string, ShapeWithName> = require('../../assets/shapes_with_names.json');
 
-export default function RouteSuggestScreen() {
-  const [origin, setOrigin] = useState<LatLng | null>(null);
-  const [destination, setDestination] = useState<LatLng | null>(null);
-  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
-  const [routeShape, setRouteShape] = useState<LatLng[]>([]);
+export default function RouteSuggestScreen({ navigation }: any) {
+  const [destination, setDestination] = useState('');
+  const [userLocation, setUserLocation] = useState<LatLng | null>(null);
 
-  // Set marker by tapping map
-  const handleMapPress = (e: MapPressEvent) => {
-    const coord = e.nativeEvent.coordinate;
-    if (!origin) setOrigin(coord);
-    else if (!destination) setDestination(coord);
-  };
-
-  // Call backend to get route suggestion
-  const suggestRoute = async () => {
-    if (!origin || !destination) {
-      Alert.alert('Please select both origin and destination');
+  const handleGetLocation = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission denied');
       return;
     }
-    try {
-      const res = await axios.get('http://192.168.254.106:4000/routes/suggest', {
-        params: {
-          originLat: origin.latitude,
-          originLon: origin.longitude,
-          destLat: destination.latitude,
-          destLon: destination.longitude,
-        },
-      });
-      setSuggestion(res.data);
-      if (res.data.type === 'direct' && res.data.route_id) {
-        // Fetch shape for the route
-        const shapeRes = await axios.get('http://192.168.254.106:4000/route_shape', {
-          params: { route_id: res.data.route_id },
-        });
-        setRouteShape(shapeRes.data.shape);
-      } else {
-        setRouteShape([]);
-      }
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        Alert.alert('Error', err.message);
-      } else {
-        Alert.alert('Error', 'Unknown error');
-      }
-    }
+    const loc = await Location.getCurrentPositionAsync({});
+    setUserLocation({ lat: loc.coords.latitude, lon: loc.coords.longitude });
   };
 
-  // Reset selection
-  const reset = () => {
-    setOrigin(null);
-    setDestination(null);
-    setSuggestion(null);
-    setRouteShape([]);
+  const handleSuggest = async () => {
+    if (!userLocation || !destination) {
+      Alert.alert('Please provide both your location and destination.');
+      return;
+    }
+
+    let destLoc: LatLng | null = null;
+
+    // Try to parse as coordinates
+    const [lat, lon] = destination.split(',').map(Number);
+    if (!isNaN(lat) && !isNaN(lon)) {
+      destLoc = { lat, lon };
+    } else {
+      // Use Nominatim to geocode the place name
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destination)}`
+        );
+        const data = await response.json();
+        if (data && data.length > 0) {
+          destLoc = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+        } else {
+          Alert.alert('Destination not found', 'Please enter a valid place name or address.');
+          return;
+        }
+      } catch (err) {
+        Alert.alert('Error', 'Failed to geocode destination.');
+        return;
+      }
+    }
+
+    // Build shapes object for suggestRoutes
+    const shapes: Record<string, LatLng[]> = {};
+    Object.entries(shapesWithNames).forEach(([shape_id, obj]) => {
+      shapes[shape_id] = obj.shape;
+    });
+    const suggestions = suggestRoutes(userLocation, destLoc, shapes);
+    // Attach route names to suggestions
+    const suggestionsWithNames = suggestions.map((s: any) => ({
+      ...s,
+      route_short_name: shapesWithNames[s.shape_id]?.route_short_name,
+      route_long_name: shapesWithNames[s.shape_id]?.route_long_name,
+    }));
+    navigation.navigate('Results', { suggestions: suggestionsWithNames, userLocation, destLoc });
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <MapView
-        style={{ flex: 1 }}
-        initialRegion={{
-          latitude: 7.1907, // Davao default
-          longitude: 125.4553,
-          latitudeDelta: 0.1,
-          longitudeDelta: 0.1,
-        }}
-        onPress={handleMapPress}
-      >
-        {origin && <Marker coordinate={origin} pinColor="green" />}
-        {destination && <Marker coordinate={destination} pinColor="red" />}
-        {routeShape.length > 0 && (
-          <Polyline coordinates={routeShape} strokeColor="#007AFF" strokeWidth={4} />
-        )}
-      </MapView>
-      <View style={styles.panel}>
-        <Button title="Suggest Route" onPress={suggestRoute} />
-        <Button title="Reset" onPress={reset} color="#888" />
-        {suggestion && (
-          <Text style={{ marginTop: 10 }}>
-            {suggestion.type === 'direct' && suggestion.route_id
-              ? `Suggested Route: ${suggestion.route_id}`
-              : suggestion.message}
-          </Text>
-        )}
-      </View>
+    <View style={styles.container}>
+      <Text style={styles.label}>Step 1: Get your current location</Text>
+      <Button title={userLocation ? "Location Set" : "Get My Location"} onPress={handleGetLocation} color={userLocation ? '#0a662e' : undefined} />
+      {userLocation && (
+        <Text style={styles.locationText}>
+          Your location: {userLocation.lat.toFixed(5)}, {userLocation.lon.toFixed(5)}
+        </Text>
+      )}
+      <Text style={styles.label}>Step 2: Enter your destination</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Destination (lat,lon)"
+        value={destination}
+        onChangeText={setDestination}
+      />
+      <Button title="Suggest Routes" onPress={handleSuggest} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'white',
-    padding: 10,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    elevation: 5,
-  },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
+  label: { fontSize: 16, fontWeight: 'bold', marginTop: 16, marginBottom: 4, color: '#0a662e' },
+  input: { borderWidth: 1, width: 220, margin: 10, padding: 8, borderRadius: 8, backgroundColor: '#f9f9f9', borderColor: '#0a662e' },
+  locationText: { color: '#333', marginBottom: 8 },
 });
