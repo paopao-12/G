@@ -7,123 +7,108 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Switch,
-  Modal,
-  Dimensions,
   TextInput,
+  Dimensions,
   Image,
-  FlatList
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import MapView, { Marker, PROVIDER_DEFAULT, Polyline } from 'react-native-maps';
 import api, { Route, FareInfo, RouteFilter } from '../services/api';
 import { BUS_STOPS } from '../busStops';
 import { RootStackParamList } from '../types/navigation';
-import { RouteSuggestion, LocationOption, PassengerType } from '../types';
-import { MaterialIcons, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { PanGestureHandler, State, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  useAnimatedGestureHandler,
-  runOnJS,
-} from 'react-native-reanimated';
-import * as Location from 'expo-location';
+import { PassengerType } from '../types';
+import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-const SNAP_POINTS = [0, SCREEN_HEIGHT * 0.45, SCREEN_HEIGHT * 0.9]; // Collapsed, Half-open, Full-open
-
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
-interface GestureHandlerContext {
-  startY: number; // Store the Y position at the start of the gesture
-  [key: string]: unknown; // Add index signature to allow for arbitrary properties
-}
+const busIcon = require('../../assets/bus icon3.png'); // Ensure you have a bus icon image in your assets
 
-type SelectionMode = 'none' | 'origin' | 'destination';
+
 
 const HomeScreen = () => {
   const [routes, setRoutes] = useState<Route[]>([]);
-  const [selectedRoute, setSelectedRoute] = useState<number | null>(null);
-  const [passengerType, setPassengerType] = useState<PassengerType>('regular');
-  const [fareInfo, setFareInfo] = useState<FareInfo | null>(null);
+  const [selectedRouteIds, setSelectedRouteIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [calculating, setCalculating] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ coords: { latitude: number; longitude: number } } | null>(null);
-  const [filters, setFilters] = useState<RouteFilter>({
-    trafficAware: true,
-    timeOfDay: true,
-    accessibility: false,
-    maxDistance: 500, // meters
-  });
- 
-  const [locationLoading, setLocationLoading] = useState(false);
-  const mapRef = useRef<MapView>(null);
-  const navigation = useNavigation<HomeScreenNavigationProp>();
   const [userRole, setUserRole] = useState<string | null>(null);
-
-  const translateY = useSharedValue(SNAP_POINTS[1]); // Start half-open
-
-  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, GestureHandlerContext>({
-    onStart: (event, ctx) => {
-      ctx.startY = translateY.value;
-    },
-    onActive: (event, ctx) => {
-      translateY.value = ctx.startY + event.translationY;
-      // Clamp the value between the collapsed and full-open points
-      translateY.value = Math.max(SNAP_POINTS[0], Math.min(SNAP_POINTS[2], translateY.value));
-    },
-    onEnd: (event) => {
-      if (event.velocityY > 500) {
-        // Flick down, collapse
-        translateY.value = withSpring(SNAP_POINTS[2]);
-      } else if (event.velocityY < -500) {
-        // Flick up, expand
-        translateY.value = withSpring(SNAP_POINTS[0]);
-      } else {
-        // Snap to nearest snap point
-        const dest = SNAP_POINTS.find(p => Math.abs(p - translateY.value) < 100);
-        if (dest !== undefined) {
-          translateY.value = withSpring(dest);
-        } else {
-          // If no snap point nearby, default to half-open
-          translateY.value = withSpring(SNAP_POINTS[1]);
-        }
-      }
-    },
-  });
-
-  const rBottomSheetStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateY: translateY.value }],
-    };
-  });
+  const navigation = useNavigation<HomeScreenNavigationProp>();
 
   useEffect(() => {
     loadData();
-   
-  }, []);
-
-
-
-  useEffect(() => {
-    // Fetch user role from AsyncStorage
     AsyncStorage.getItem('user_role').then(role => {
       setUserRole(role);
     });
   }, []);
 
-  
+  const GTFS_ROUTES = [
+  { route_id: 'route_1', route_short_name: 'Bago Aplaya' },
+  { route_id: 'route_2', route_short_name: 'Bangkal' },
+  { route_id: 'route_3', route_short_name: 'Bo. Obrero' },
+  { route_id: 'route_4', route_short_name: 'Buhangin via Dacudao' },
+  { route_id: 'route_5', route_short_name: 'Buhangin via JP Laurel' },
+  { route_id: 'route_6', route_short_name: 'Bunawan via Buhangin' },
+  { route_id: 'route_7', route_short_name: 'Bunawan via Sasa' },
+  { route_id: 'route_8', route_short_name: 'Calinan' },
+  { route_id: 'route_9', route_short_name: 'Camp Catitipan via JP Laurel' },
+  { route_id: 'route_10', route_short_name: 'Catalunan Grande' },
+  { route_id: 'route_11', route_short_name: 'Ecoland' },
+  { route_id: 'route_12', route_short_name: 'El Rio' },
+  { route_id: 'route_13', route_short_name: 'Emily Homes' },
+  { route_id: 'route_14', route_short_name: 'Jade Valley' },
+  { route_id: 'route_15', route_short_name: 'Lasang via Buhangin' },
+  { route_id: 'route_16', route_short_name: 'Lasang via Sasa' },
+  { route_id: 'route_17', route_short_name: 'Maa - Agdao' },
+  { route_id: 'route_18', route_short_name: 'Maa - Bankerohan' },
+  { route_id: 'route_19', route_short_name: 'Magtuod' },
+  { route_id: 'route_20', route_short_name: 'Matina' },
+  { route_id: 'route_21', route_short_name: 'Matina Aplaya' },
+  { route_id: 'route_22', route_short_name: 'Matina Crossing' },
+  { route_id: 'route_23', route_short_name: 'Matina Pangi' },
+  { route_id: 'route_24', route_short_name: 'Mintal' },
+  { route_id: 'route_25', route_short_name: 'Panacan via Cabaguio' },
+  { route_id: 'route_26', route_short_name: 'Panacan - SM City Davao' },
+  { route_id: 'route_27', route_short_name: 'Puan' },
+  { route_id: 'route_28', route_short_name: 'Route 1' },
+  { route_id: 'route_29', route_short_name: 'Route 2' },
+  { route_id: 'route_30', route_short_name: 'Route 3' },
+  { route_id: 'route_31', route_short_name: 'Route 4' },
+  { route_id: 'route_32', route_short_name: 'Route 5' },
+  { route_id: 'route_33', route_short_name: 'Route 6' },
+  { route_id: 'route_34', route_short_name: 'Route 7' },
+  { route_id: 'route_35', route_short_name: 'Route 8' },
+  { route_id: 'route_36', route_short_name: 'Route 9' },
+  { route_id: 'route_37', route_short_name: 'Route 10' },
+  { route_id: 'route_38', route_short_name: 'Route 11' },
+  { route_id: 'route_39', route_short_name: 'Route 12' },
+  { route_id: 'route_40', route_short_name: 'Route 13' },
+  { route_id: 'route_41', route_short_name: 'Route 14' },
+  { route_id: 'route_42', route_short_name: 'Route 15' },
+  { route_id: 'route_43', route_short_name: 'Sasa via Cabaguio' },
+  { route_id: 'route_44', route_short_name: 'Sasa via JP Laurel' },
+  { route_id: 'route_45', route_short_name: 'Sasa via R. Castillo' },
+  { route_id: 'route_46', route_short_name: 'Talomo' },
+  { route_id: 'route_47', route_short_name: 'Tibungco via Buhangin' },
+  { route_id: 'route_48', route_short_name: 'Tibungco via Cabaguio' },
+  { route_id: 'route_49', route_short_name: 'Tibungco via R. Castillo' },
+  { route_id: 'route_50', route_short_name: 'Toril' },
+  { route_id: 'route_51', route_short_name: 'Ulas' },
+  { route_id: 'route_52', route_short_name: 'Wa-an' }
+];
 
   const loadData = async () => {
     try {
       setLoading(true);
       const routesResponse = await api.getRoutes();
+       const routesWithNames = routesResponse.map(route => {
+      const gtfsRoute = GTFS_ROUTES.find(r => r.route_id === route.route_id);
+      return {
+        ...route,
+        route_short_name: gtfsRoute?.route_short_name || route.route_id,
+      };
+    });
       setRoutes(routesResponse);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -133,35 +118,31 @@ const HomeScreen = () => {
     }
   };
 
-  
-  useEffect(() => {
-    if (userLocation) {
-      loadData();
-    }
-  }, [userLocation]);
-
-
-
-  const getDiscountedFare = (fare: number, type: PassengerType) => {
-    switch (type) {
-      case 'student':
-        return fare * 0.8; // 20% discount
-      case 'senior':
-      case 'pwd':
-        return fare * 0.5; // 50% discount
-      default:
-        return fare;
-    }
+  const toggleRouteSelection = (routeId: string) => {
+    setSelectedRouteIds(prevSelected =>
+      prevSelected.includes(routeId)
+        ? prevSelected.filter(id => id !== routeId)
+        : [...prevSelected, routeId]
+    );
   };
 
-  const toggleFilter = (key: keyof RouteFilter) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
+ const toggleShowAllRoutes = () => {
+  if (selectedRouteIds.length === routes.length) {
+    // All selected, so clear all
+    setSelectedRouteIds([]);
+  } else {
+    // Select all routes
+    setSelectedRouteIds(routes.map(route => route.route_id));
+  }
+};
 
-  
+const [isExpanded, setIsExpanded] = useState(true);
+const [searchTerm, setSearchTerm] = useState('');
+
+const filteredRoutes = routes.filter(route =>
+  route.route_id.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -177,13 +158,6 @@ const HomeScreen = () => {
         <View style={styles.logoContainer}>
           <Text style={styles.logoText}>G!</Text>
         </View>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#888" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search routes"
-            placeholderTextColor="#888" />
-        </View>
         <TouchableOpacity style={styles.menuIcon}>
           <MaterialIcons name="menu" size={24} color="#333" />
         </TouchableOpacity>
@@ -197,63 +171,106 @@ const HomeScreen = () => {
         )}
       </View>
 
-      {/* Button to go to Route Suggest Screen - fixed at bottom center */}
-      <View style={styles.routeSuggestButtonContainer}>
+      {/* Multi-select Route Checkbox List */}
+      <View style={styles.routeSelectorContainer}>
         <TouchableOpacity
-          style={styles.routeSuggestButton}
-          onPress={() => navigation.navigate('RouteSuggest')}
+          style={styles.header}
+          onPress={() => setIsExpanded(!isExpanded)}
+          activeOpacity={0.7}
         >
-          <Text style={styles.routeSuggestButtonText}>
-            ASA TA G!
-          </Text>
+          <Text style={styles.headerText}>Routes</Text>
+          <MaterialIcons
+            name={isExpanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+            size={24}
+            color="#555"
+          />
         </TouchableOpacity>
+
+        {isExpanded && (
+          <View style={styles.content}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Route Name"
+              value={searchTerm}
+              onChangeText={setSearchTerm}
+            />
+            <ScrollView style={styles.scrollView}>
+              {filteredRoutes.map(route => {
+                const isSelected = selectedRouteIds.includes(route.route_id);
+                const color = `#${route.route_color || '0a662e'}`;
+                 return (
+    <TouchableOpacity
+      key={route.route_id}
+      onPress={() => toggleRouteSelection(route.route_id)}
+      style={styles.routeItem}
+      activeOpacity={0.7}
+    >
+      <View
+        style={[
+          styles.checkbox,
+          {
+            borderColor: color,
+            backgroundColor: isSelected ? color : '#fff',
+          },
+        ]}
+      >
+        {isSelected && <MaterialIcons name="check" size={18} color="#fff" />}
+      </View>
+      <Text style={[styles.routeText, isSelected && { fontWeight: 'bold', color }]}>
+        {route.route_short_name}
+      </Text>
+    </TouchableOpacity>
+  );
+})}
+            </ScrollView>
+            <TouchableOpacity style={styles.showAllButton} onPress={toggleShowAllRoutes}>
+  <Text style={styles.showAllButtonText}>
+    {selectedRouteIds.length === routes.length ? 'Clear All' : 'Show All'}
+  </Text>
+</TouchableOpacity>
+          </View>
+        )}
       </View>
 
-      {/* Map View: BUS_STOPS and GTFS polylines rendered here. */}
+      {/* Map View */}
       <MapView
-        ref={mapRef}
         style={styles.map}
         provider={PROVIDER_DEFAULT}
         initialRegion={{
-          latitude: userLocation?.coords.latitude || 7.0722,
-          longitude: userLocation?.coords.longitude || 125.6131,
+          latitude: 7.0722,
+          longitude: 125.6131,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
       >
-        {userLocation && (
-          <Marker
-            coordinate={{
-              latitude: userLocation.coords.latitude,
-              longitude: userLocation.coords.longitude,
-            }}
-            title="Your Location"
-            pinColor="blue"
-          />
-        )}
-        {/* Render static bus stops */}
+        {/* Render static bus stops with custom icon */}
         {BUS_STOPS.map((stop, idx) => (
           <Marker
             key={`busstop-${idx}`}
             coordinate={{ latitude: stop.latitude, longitude: stop.longitude }}
             title={stop.name}
           >
-            <View style={{backgroundColor:'#0a662e',borderRadius:8,padding:4}}>
-              <Text style={{color:'#fff',fontWeight:'bold',fontSize:10}}>{stop.name}</Text>
-            </View>
+            <Image
+              source={busIcon}
+              style={{ width: 24, height: 24 }}
+              resizeMode="contain"
+            />
           </Marker>
         ))}
-        {/* Render GTFS route polylines */}
-        {routes.map((route, idx) => (
-          <Polyline
-            key={`route-polyline-${route.route_id}`}
-            coordinates={route.polyline}
-            strokeColor={'#F4B400'}
-            strokeWidth={4}
-            lineCap="round"
-            lineJoin="round"
-          />
-        ))}
+
+        {/* Render polylines for selected routes */}
+       {routes
+  .filter(route => selectedRouteIds.length > 0 && selectedRouteIds.includes(route.route_id))
+  .map(route => (
+    <Polyline
+      key={`route-polyline-${route.route_id}`}
+      coordinates={route.polyline}
+       strokeColor={`#${route.route_color || 'F4B400'}`} // Default color if not specified
+      strokeWidth={4}
+      lineCap="round"
+      lineJoin="round"
+    />
+  ))}
       </MapView>
     </View>
   );
@@ -262,58 +279,89 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#e0f2f7', // Light blue background
+    backgroundColor: '#e0f2f7',
   },
   header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 15,
-    paddingTop: 40,
-    paddingBottom: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white
-    zIndex: 1,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 5,
+    alignItems: 'center',
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
-  routeSuggestButtonContainer: {
+  headerText: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#333',
+  },
+  routeSelectorContainer: {
     position: 'absolute',
-    bottom: 32,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  routeSuggestButton: {
-    backgroundColor: '#0a662e',
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    top: 100,
+    left: 10,
+    zIndex: 20,
+    backgroundColor: '#fff',
+    borderRadius: 8,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    width: 250,
   },
-  routeSuggestButtonText: {
-    color: '#fff',
-    fontSize: 18,
+  content: {
+    padding: 10,
+  },
+  searchInput: {
+    height: 40,
+    borderColor: '#ddd',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    fontSize: 16,
+  },
+  scrollView: {
+    maxHeight: 200,
+  },
+  routeItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 3,
+    borderWidth: 1.5,
+    borderColor: '#999',
+    marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  routeText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  selectedRouteText: {
     fontWeight: 'bold',
-    letterSpacing: 1,
+  },
+  showAllButton: {
+    marginTop: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+    alignSelf: 'flex-end',
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  showAllButtonText: {
+    color: '#555',
+    fontWeight: '600',
+    fontSize: 14,
   },
   logoContainer: {
-    backgroundColor: '#0a662e', // Dark green
+    backgroundColor: '#0a662e',
     borderRadius: 20,
     paddingVertical: 5,
     paddingHorizontal: 10,
@@ -322,22 +370,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: '#fff',
-  },
-  searchBar: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    marginHorizontal: 10,
-    height: 40,
-  },
-  searchInput: {
-    flex: 1,
-    marginLeft: 5,
-    fontSize: 16,
-    color: '#333',
+    textShadowColor: '#00000066',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 6,
+    textAlign: 'center',
+    fontFamily: 'sans-serif-condensed',
   },
   menuIcon: {
     padding: 5,
@@ -345,313 +382,10 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
-  bottomSheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: SCREEN_HEIGHT, // Max height
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: -3,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 10,
-    paddingHorizontal: 20,
-    paddingTop: 10,
-  },
-  handleBar: {
-    width: 40,
-    height: 5,
-    backgroundColor: '#ccc',
-    borderRadius: 2.5,
-    alignSelf: 'center',
-    marginVertical: 10,
-  },
-  panelContent: {
-    paddingBottom: 100, // Ensure content is scrollable above the bottom edge
-  },
-  panelTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#0a662e', // Dark green
-    marginBottom: 20,
-  },
-  inputField: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    marginBottom: 10,
-  },
-  inputFieldText: {
-    marginLeft: 10,
-    fontSize: 16,
-    color: '#333',
-    flex: 1,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 10,
-  },
-  pickerContainer: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  picker: {
-    height: 50,
-    width: '100%',
-    color: '#333',
-  },
-  label: {
-    fontSize: 16,
-    color: '#555',
-    marginBottom: 5,
-    marginLeft: 10,
-    marginTop: 5,
-  },
-  button: {
-    backgroundColor: '#0a662e',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  buttonDisabled: {
-    backgroundColor: '#a0a0a0',
-  },
-  filtersContainer: {
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  filterLabel: {
-    fontSize: 16,
-    color: '#333',
-  },
   centered: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-  modalContainer: {
-    width: '90%',
-    height: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    overflow: 'hidden',
-  },
-  closeButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    zIndex: 1,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 15,
-    padding: 5,
-  },
-  fullMap: {
-    flex: 1,
-  },
-  directionsButton: {
-    position: 'absolute',
-    bottom: 20,
-    alignSelf: 'center',
-    backgroundColor: '#007AFF',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 25,
-  },
-  directionsButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  backButtonText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#0a662e',
-    marginLeft: 10,
-  },
-  routeCard: {
-    backgroundColor: '#f9f9f9',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  routeCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 5,
-  },
-  routeCardFare: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#e67e22', // Orange color
-  },
-  routeCardTime: {
-    fontSize: 16,
-    color: '#555',
-  },
-  routeCardBody: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  routeCardName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    flex: 1,
-  },
-  routeCardDetails: {
-    fontSize: 14,
-    color: '#777',
-    marginLeft: 10,
-  },
-  // Styles for DestinationPickerModal
-  destinationPickerModalContainer: {
-    width: '90%',
-    height: '70%',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  destinationSearchInput: {
-    height: 50,
-    borderColor: '#ddd',
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    fontSize: 16,
-    color: '#333',
-  },
-  stopListItem: {
-    paddingVertical: 15,
-    borderBottomColor: '#eee',
-    borderBottomWidth: 1,
-  },
-  stopListItemText: {
-    fontSize: 16,
-    color: '#333',
-  },
-  closeModalButton: {
-    backgroundColor: '#e74c3c',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  closeModalButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  selectionModeIndicator: {
-    position: 'absolute',
-    top: 100,
-    left: 20,
-    right: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    padding: 15,
-    borderRadius: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  selectionModeText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  cancelSelectionButton: {
-    backgroundColor: '#e74c3c',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 5,
-  },
-  cancelSelectionText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  modalActionButton: {
-    backgroundColor: '#0a662e',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  modalActionButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  selectionModeIndicatorOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  selectionModeTextOverlay: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
   },
 });
 

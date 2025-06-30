@@ -36,14 +36,22 @@ export default function RouteSuggestScreen({ navigation }: any) {
     if (!isNaN(lat) && !isNaN(lon)) {
       destLoc = { lat, lon };
     } else {
-      // Use Nominatim to geocode the place name
+      // Use Google Places API to geocode the place name
       try {
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(destination)}`
-        );
+        const apiKey = 'AIzaSyCr_EFHO0mW2q9hpwIx6jbyhiUoEK6O1w8';
+        const url = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(destination)}&inputtype=textquery&fields=geometry,formatted_address&key=${apiKey}`;
+        const response = await fetch(url);
+        if (!response.ok) {
+          Alert.alert('Error', 'Failed to contact Google Places API.');
+          return;
+        }
         const data = await response.json();
-        if (data && data.length > 0) {
-          destLoc = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+        if (data.candidates && data.candidates.length > 0) {
+          const loc = data.candidates[0].geometry.location;
+          const address = data.candidates[0].formatted_address;
+          destLoc = { lat: loc.lat, lon: loc.lng };
+          // Show confirmation to user
+          Alert.alert('Destination found', `Using: ${address}`);
         } else {
           Alert.alert('Destination not found', 'Please enter a valid place name or address.');
           return;

@@ -2,7 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import SplashScreen from '../screens/SplashScreen';
-import LoginSignupScreen from '../screens/LoginSignupScreen';
+//import LoginSignupScreen from '../screens/LoginSignupScreen';
 import HomeScreen from '../screens/HomeScreen';
 import RouteSuggestScreen from '../screens/RouteSuggestScreen';
 import { ResultsScreen } from '../screens/ResultsScreen';
@@ -38,11 +38,11 @@ export default function AppNavigator() {
           component={SplashScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
+        {/* <Stack.Screen 
           name="LoginSignup" 
           component={LoginSignupScreen}
           options={{ headerShown: false }}
-        />
+        /> */}
         <Stack.Screen 
           name="Home" 
           component={HomeScreen}
