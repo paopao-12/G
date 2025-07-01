@@ -11,7 +11,7 @@ export interface FareCalculation {
   discountedFare?: number;
 }
 
-export type PassengerType = 'regular' | 'student' | 'senior' | 'pwd';
+export type PassengerType = 'regular' | 'student' | 'senior' | 'disabled';
 
 export interface LocationOption {
   id: string;

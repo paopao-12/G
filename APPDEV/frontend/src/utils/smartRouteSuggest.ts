@@ -7,11 +7,13 @@ export interface LatLng {
 
 export interface RouteSuggestion {
   shape_id: string;
+  route_short_name?: string; // Add optional route_short_name
   entry: LatLng;
   exit: LatLng;
   entryDistance: number;
   exitDistance: number;
   totalDistance: number;
+  routeDistance: number;
 }
 
 export function findNearestPoint(location: LatLng, points: LatLng[]) {
@@ -27,10 +29,13 @@ export function findNearestPoint(location: LatLng, points: LatLng[]) {
   return { point: nearest!, distance: minDist };
 }
 
+// ... existing code ...
+
 export function suggestRoutes(
   user: LatLng,
   dest: LatLng,
   shapes: Record<string, LatLng[]>,
+  routeShortNames: Record<string, string>,
   threshold = 100
 ): RouteSuggestion[] {
   const suggestions: RouteSuggestion[] = [];
@@ -38,13 +43,22 @@ export function suggestRoutes(
     const userNear = findNearestPoint(user, points);
     const destNear = findNearestPoint(dest, points);
     if (userNear.distance < threshold && destNear.distance < threshold) {
+      // Calculate routeDistance in km
+      const routeDistance = haversine(
+        userNear.point.lat,
+        userNear.point.lon,
+        destNear.point.lat,
+        destNear.point.lon
+      ) / 1000;
       suggestions.push({
         shape_id,
+        route_short_name: routeShortNames[shape_id],
         entry: userNear.point,
         exit: destNear.point,
         entryDistance: userNear.distance,
         exitDistance: destNear.distance,
         totalDistance: userNear.distance + destNear.distance,
+        routeDistance, // <-- set here
       });
     }
   }

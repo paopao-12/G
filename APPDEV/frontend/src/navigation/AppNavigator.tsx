@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SplashScreen from '../screens/SplashScreen';
 //import LoginSignupScreen from '../screens/LoginSignupScreen';
 import HomeScreen from '../screens/HomeScreen';
-import RouteSuggestScreen from '../screens/RouteSuggestScreen';
+//import RouteSuggestScreen from '../screens/RouteSuggestScreen';
 import { ResultsScreen } from '../screens/ResultsScreen';
 import RouteDetailsScreen from '../screens/RouteDetailsScreen';
 import { RootStackParamList } from '../types/navigation';
@@ -46,30 +46,25 @@ export default function AppNavigator() {
         <Stack.Screen 
           name="Home" 
           component={HomeScreen}
-          options={{
-            title: 'Davao Commuter Guide',
-          }}
+          options={{ headerShown: false }}
         />
-        <Stack.Screen 
+        {/* <Stack.Screen 
           name="RouteSuggest" 
           component={RouteSuggestScreen}
           options={{
             title: 'Suggest Route',
           }}
-        />
+        /> */}
         <Stack.Screen 
           name="Results" 
           component={ResultsScreen}
-          options={{
-            title: 'Route Suggestions',
-          }}
+          options={{ headerShown: false }}
+          
         />
         <Stack.Screen 
           name="RouteDetails" 
           component={RouteDetailsScreen}
-          options={{
-            title: 'Route Details',
-          }}
+          options={{ headerShown: false }}
         />
       </Stack.Navigator>
     </NavigationContainer>
