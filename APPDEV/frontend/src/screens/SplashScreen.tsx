@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { useNavigation, StackActions } from '@react-navigation/native';
 
 const SplashScreen = () => {
@@ -14,7 +14,11 @@ const SplashScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.logoText}>G!</Text>
+      <Image
+        source={require('../../assets/g-logo.png')} // Adjust the path to your logo
+        style={styles.logo}
+        resizeMode="contain" // Adjust the resize mode as needed
+      />
     </View>
   );
 };
@@ -26,15 +30,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  logoText: {
-    fontSize: 96,
-    fontWeight: 'bold',
-    color: '#fff',
-    textShadowColor: '#00000066',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 6,
-    textAlign: 'center',
-    fontFamily: 'sans-serif-condensed',
+  logo: {
+    width: 200, // Set the width of the logo
+    height: 200, // Set the height of the logo
   },
 });
 

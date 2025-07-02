@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -11,10 +11,9 @@ import {
   Dimensions,
   Image,
   Button,
-  Modal,
-  Switch,
   Pressable,
-  //Flatlist,
+  FlatList,
+  
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -23,8 +22,9 @@ import api, { Route } from '../services/api';
 import { BUS_STOPS } from '../busStops';
 import { RootStackParamList } from '../types/navigation';
 import { haversine } from '../utils/haversine';
-import { MaterialIcons } from '@expo/vector-icons';
+//import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 import * as Location from 'expo-location';
 import Animated, {
@@ -37,6 +37,7 @@ import Animated, {
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { LatLng, RouteSuggestion, suggestRoutes } from '../utils/smartRouteSuggest';
 
+
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -47,7 +48,55 @@ const GTFS_ROUTES = [
   { route_id: 'route_3', route_short_name: 'Bo. Obrero', route_color: 'ffff00' },
   { route_id: 'route_4', route_short_name: 'Buhangin via Dacudao', route_color: '008000' },
   { route_id: 'route_5', route_short_name: 'Buhangin via JP Laurel', route_color: '4da8ee' },
+  { route_id: 'route_6', route_short_name: 'Bunawan via Buhangin', route_color: '8d72e1' },
+  { route_id: 'route_7', route_short_name: 'Bunawan via Sasa', route_color: 'ffc0cb' },
+  { route_id: 'route_8', route_short_name: 'Calinan', route_color: 'ff0000' },
+  { route_id: 'route_9', route_short_name: 'Camp Catitipan via JP Laurel', route_color: 'ffa500' },
+  { route_id: 'route_10', route_short_name: 'Catalunan Grande', route_color: 'ffff00' },
+  { route_id: 'route_11', route_short_name: 'Ecoland', route_color: '008000' },
+  { route_id: 'route_12', route_short_name: 'El Rio', route_color: '4da8ee' },
+  { route_id: 'route_13', route_short_name: 'Emily Homes', route_color: '8d72e1' },
+  { route_id: 'route_14', route_short_name: 'Jade Valley', route_color: 'ffc0cb' },
+  { route_id: 'route_15', route_short_name: 'Lasang via Buhangin', route_color: 'ff0000' },
+  { route_id: 'route_16', route_short_name: 'Lasang via Sasa', route_color: 'ffa500' },
+  { route_id: 'route_17', route_short_name: 'Maa - Agdao', route_color: 'ffff00' },
+  { route_id: 'route_18', route_short_name: 'Maa - Bankerohan', route_color: '008000' },
+  { route_id: 'route_19', route_short_name: 'Magtuod', route_color: '4da8ee' },
+  { route_id: 'route_20', route_short_name: 'Matina', route_color: '8d72e1' },
+  { route_id: 'route_21', route_short_name: 'Matina Aplaya', route_color: 'ffc0cb' },
+  { route_id: 'route_22', route_short_name: 'Matina Crossing', route_color: 'ff0000' },
+  { route_id: 'route_23', route_short_name: 'Matina Pangi', route_color: 'ffa500' },
+  { route_id: 'route_24', route_short_name: 'Mintal', route_color: 'ffff00' },
+  { route_id: 'route_25', route_short_name: 'Panacan via Cabaguio', route_color: '008000' },
+  { route_id: 'route_26', route_short_name: 'Panacan - SM City Davao', route_color: '4da8ee' },
+  { route_id: 'route_27', route_short_name: 'Puan', route_color: '8d72e1' },
+  { route_id: 'route_28', route_short_name: 'Route 1', route_color: 'ffc0cb' },
+  { route_id: 'route_29', route_short_name: 'Route 2', route_color: 'ff0000' },
+  { route_id: 'route_30', route_short_name: 'Route 3', route_color: 'ffa500' },
+  { route_id: 'route_31', route_short_name: 'Route 4', route_color: 'ffff00' },
+  { route_id: 'route_32', route_short_name: 'Route 5', route_color: '008000' },
+  { route_id: 'route_33', route_short_name: 'Route 6', route_color: '4da8ee' },
+  { route_id: 'route_34', route_short_name: 'Route 7', route_color: '8d72e1' },
+  { route_id: 'route_35', route_short_name: 'Route 8', route_color: 'ffc0cb' },
+  { route_id: 'route_36', route_short_name: 'Route 9', route_color: 'ff0000' },
+  { route_id: 'route_37', route_short_name: 'Route 10', route_color: 'ffa500' },
+  { route_id: 'route_38', route_short_name: 'Route 11', route_color: 'ffff00' },
+  { route_id: 'route_39', route_short_name: 'Route 12', route_color: '008000' },
+  { route_id: 'route_40', route_short_name: 'Route 13', route_color: '4da8ee' },
+  { route_id: 'route_41', route_short_name: 'Route 14', route_color: '8d72e1' },
+  { route_id: 'route_42', route_short_name: 'Route 15', route_color: 'ffc0cb' },
+  { route_id: 'route_43', route_short_name: 'Sasa via Cabaguio', route_color: 'ff0000' },
+  { route_id: 'route_44', route_short_name: 'Sasa via JP Laurel', route_color: 'ffa500' },
+  { route_id: 'route_45', route_short_name: 'Sasa via R. Castillo', route_color: 'ffff00' },
+  { route_id: 'route_46', route_short_name: 'Talomo', route_color: '008000' },
+  { route_id: 'route_47', route_short_name: 'Tibungco via Buhangin', route_color: '4da8ee' },
+  { route_id: 'route_48', route_short_name: 'Tibungco via Cabaguio', route_color: '8d72e1' },
+  { route_id: 'route_49', route_short_name: 'Tibungco via R. Castillo', route_color: 'ffc0cb' },
+  { route_id: 'route_50', route_short_name: 'Toril', route_color: 'ff0000' },
+  { route_id: 'route_51', route_short_name: 'Ulas', route_color: 'ffa500' },
+  { route_id: 'route_52', route_short_name: 'Wa-an', route_color: 'ffff00' },
 ];
+
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyCr_EFHO0mW2q9hpwIx6jbyhiUoEK6O1w8';
 
@@ -75,9 +124,9 @@ type PassengerType = 'regular' | 'senior' | 'student' | 'disabled';
 
 const PASSENGER_DISCOUNT: Record<PassengerType, number> = {
   regular: 0,
-  senior: 0.2, // 20% discount
-  student: 0.15, // 15% discount
-  disabled: 0.5, // 50% discount
+  senior: 0.2, 
+  student: 0.2, 
+  disabled: 0.2, 
 };
 
 const BASE_FARE = 13;
@@ -86,7 +135,6 @@ const PER_KM_FARE = 1.8; // Fare per kilometer after the base distance
 
 const HomeScreen = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-
   const [routes, setRoutes] = useState<Route[]>([]);
   const [passengerType, setPassengerType] = useState<PassengerType>('regular');
   const [selectedRouteIds, setSelectedRouteIds] = useState<string[]>([]);
@@ -97,8 +145,10 @@ const HomeScreen = () => {
   const [destination, setDestination] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
+  //const [selectedRouteIds, setSelectedRouteIds] = useState([]);
+  
 
   const translateY = useSharedValue(SCREEN_HEIGHT * 0.5);
 
@@ -107,8 +157,10 @@ const HomeScreen = () => {
       ctx.startY = translateY.value;
     },
     onActive: (event, ctx: any) => {
+      if (!isScrolling) {
       translateY.value = ctx.startY + event.translationY;
       translateY.value = Math.min(Math.max(translateY.value, 0), SCREEN_HEIGHT);
+      }
     },
     onEnd: () => {
       if (translateY.value < (SCREEN_HEIGHT * 0.5 + SCREEN_HEIGHT * 0.1) / 2) {
@@ -144,7 +196,7 @@ const HomeScreen = () => {
     try {
       setLoading(true);
       const routesResponse = await api.getRoutes();
-
+      console.log('Routes response:', routesResponse); 
       const routesWithNames = routesResponse.map(route => {
         const gtfsRoute = GTFS_ROUTES.find(r => r.route_id === route.route_id);
         return {
@@ -155,9 +207,9 @@ const HomeScreen = () => {
       });
 
       setRoutes(routesWithNames);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      Alert.alert('Error', 'Failed to load routes');
+      console.log('Total Routes:', routesResponse.length);
+    } catch (error: any) {
+      Alert.alert('Error', `Failed to load routes: ${error.message || error}`); // Show error message
     } finally {
       setLoading(false);
     }
@@ -172,16 +224,20 @@ const HomeScreen = () => {
   };
 
   const toggleShowAllRoutes = () => {
-    if (selectedRouteIds.length === routes.length) {
-      setSelectedRouteIds([]);
-    } else {
-      setSelectedRouteIds(routes.map(route => route.route_id));
-    }
-  };
+  if (selectedRouteIds.length === routes.length) {
+    setSelectedRouteIds([]);
+    setShowLegend(false); // Hide legend when "Clear All"
+  } else {
+    setSelectedRouteIds(routes.map(route => route.route_id));
+    setShowLegend(true); // Show legend when "Show All"
+  }
+};
+
 
   const filteredRoutes = routes.filter(route =>
     route.route_short_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
 
   const handleGetLocation = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -192,7 +248,7 @@ const HomeScreen = () => {
     const loc = await Location.getCurrentPositionAsync({});
     setUserLocation({ lat: loc.coords.latitude, lon: loc.coords.longitude });
   };
-  const routeShortNames: Record<string, string> = {};
+  const routeShortNames: Record<string, string> = { };
 
 
   const calculateFare = (distanceKm: number, type: PassengerType) => {
@@ -262,16 +318,22 @@ const HomeScreen = () => {
       </View>
     );
   }
-
+  
+  const isShowingAllRoutes = selectedRouteIds.length === routes.length;
   return (
     <View style={[styles.mainContainer]}>
       {/* Header */}
       <View style={[styles.header]}>
-        <View style={styles.logoContainer}>
-          <Text style={[styles.logoText]}>G!</Text>
-        </View>
+       <View style={styles.logoContainer}>
+  <Image
+  source={require('../../assets/g-logo.png')}
+  style={styles.logoImage}
+  resizeMode="contain"
+/>
+</View>
 
       </View>
+
 
       {/* Map View */}
       <MapView
@@ -310,71 +372,41 @@ const HomeScreen = () => {
           ))}
       </MapView>
 
-      {/* Bottom Sheet with multi-select dropdown and route suggest */}
-      <PanGestureHandler onGestureEvent={gestureHandler}>
-        <Animated.View style={[styles.bottomSheet, rStyle]}>
-          <View style={styles.handleBar} />
-          {/* Multi-select Dropdown */}
-          <Text style={styles.label}>View Routes</Text>
-          <TouchableOpacity
-            style={styles.dropdownToggle}
-            onPress={() => setDropdownOpen(!dropdownOpen)}
-          >
-            <Text style={styles.dropdownToggleText}>
-              {selectedRouteIds.length > 0
-                ? `${selectedRouteIds.length} route(s) selected`
-                : 'Select routes'}
-            </Text>
-            <MaterialIcons
-              name={dropdownOpen ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
-              size={24}
-              color="#0a662e"
+      {(isShowingAllRoutes || (showLegend && !isCollapsed)) && (
+  <View style={[styles.legendContainer, { top: isCollapsed ? 100 : SCREEN_HEIGHT * 0.1 + 10 }]}>  
+    <ScrollView>
+      {(isShowingAllRoutes ? routes : selectedRouteIds.map(routeId => routes.find(r => r.route_id === routeId))).map(
+        route => route && (
+          <View key={route.route_id} style={styles.legendItem}>
+            <View
+              style={[styles.colorBox, { backgroundColor: `#${route.route_color}` }]}
             />
-          </TouchableOpacity>
+            <Text style={styles.legendText}>{route.route_short_name}</Text>
+          </View>
+        )
+      )}
+    </ScrollView>
+  </View>
+)}
 
-          {dropdownOpen && (
-            <ScrollView
-              style={[styles.dropdownList, { maxHeight: 200 }]} // Adjust 200 as needed
-              nestedScrollEnabled={true} // allow inner scrolling inside bottom sheet
-            >
-              {filteredRoutes.map(route => {
-                const isSelected = selectedRouteIds.includes(route.route_id);
-                const color = `#${route.route_color}`;
-                return (
-                  <TouchableOpacity
-                    key={route.route_id}
-                    onPress={() => toggleRouteSelection(route.route_id)}
-                    style={styles.routeItem}
-                    activeOpacity={0.7}
-                  >
-                    <View
-                      style={[
-                        styles.checkbox,
-                        {
-                          borderColor: color,
-                          backgroundColor: isSelected ? color : '#fff',
-                        },
-                      ]}
-                    >
-                      {isSelected && <MaterialIcons name="check" size={18} color="#fff" />}
-                    </View>
-                    <Text style={[styles.routeText, isSelected && { fontWeight: 'bold', color }]}>
-                      {route.route_short_name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
-          )}
+      
 
-          <TouchableOpacity style={styles.showAllButton} onPress={toggleShowAllRoutes}>
-            <Text style={styles.showAllButtonText}>
-              {selectedRouteIds.length === routes.length ? 'Clear All' : 'Show All'}
-            </Text>
-          </TouchableOpacity>
+      <PanGestureHandler onGestureEvent={gestureHandler}>
+  <Animated.View style={[styles.bottomSheet, rStyle]}>
+    <View style={styles.handleBar} />
 
-          {/* Divider */}
-          <View style={{ height: 1, backgroundColor: '#ccc', marginVertical: 15 }} />
+    {/* New: View All Routes label */}
+    <Text style={styles.label}>View All Routes</Text>
+
+    {/* Show All Button */}
+    <TouchableOpacity style={styles.showAllButton} onPress={toggleShowAllRoutes}>
+      <Text style={styles.showAllButtonText}>
+        {selectedRouteIds.length === routes.length ? 'Clear All' : 'Show All'}
+      </Text>
+    </TouchableOpacity>
+
+    {/* Divider */}
+    <View style={{ height: 1, backgroundColor: '#ccc', marginVertical: 15 }} />
 
           {/* Route Suggestion Inputs */}
           <Text style={styles.label}>Step 1: Get your current location</Text>
@@ -430,44 +462,9 @@ const HomeScreen = () => {
       {isCollapsed && (
         <Pressable style={styles.pullUpBar} onPress={expandBottomSheet}>
           <View style={styles.pullUpHandle} />
-          <Text style={styles.pullUpText}>Swipe up or tap to open</Text>
+          <Text style={styles.pullUpText}>Tap to open</Text>
         </Pressable>
       )}
-
-      {/* Modal Menu */}
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity
-            style={{ flex: 1 }}
-            activeOpacity={1}
-            onPressOut={() => setModalVisible(false)}
-          />
-          <View style={[styles.modalContent, isDarkMode && styles.darkModalContent]}>
-            <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
-              <Text style={[styles.closeButtonText, isDarkMode && styles.darkCloseButtonText]}>
-                Close
-              </Text>
-            </TouchableOpacity>
-
-            <View style={styles.modalOption}>
-              <Text style={[styles.modalOptionText, isDarkMode && styles.darkModalOptionText]}>
-                Dark Mode
-              </Text>
-              <Switch
-                value={isDarkMode}
-                onValueChange={setIsDarkMode}
-                thumbColor={isDarkMode ? '#0a662e' : '#f4f3f4'}
-                trackColor={{ false: '#767577', true: '#81b0ff' }}
-              />
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 };
@@ -475,16 +472,13 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#e0f2f7',
-  },
-  darkMainContainer: {
-    backgroundColor: '#121212',
+    backgroundColor: '#0a662e',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 25,
+    padding: 30,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
@@ -495,6 +489,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 25,
     color: '#333',
+  },
+  scrollIndicatorContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  scrollButton: {
+    padding: 10,
+    backgroundColor: '#0a662e',
+    borderRadius: 5,
+  },
+  scrollButtonText: {
+    color: '#fff',
+    fontSize: 18,
   },
   dropdownToggle: {
     flexDirection: 'row',
@@ -558,19 +567,13 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     backgroundColor: '#0a662e',
-    borderRadius: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    width: 25,
+    height: 25,
+    //overflow: 'hidden',
   },
-  logoText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#fff',
-    textShadowColor: '#00000066',
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 6,
-    textAlign: 'center',
-    fontFamily: 'sans-serif-condensed',
+  logoImage: {
+  width: '270%',      
+  height: '270%',
   },
   darkLogoText: {
     color: '#a0d468',
@@ -726,6 +729,88 @@ const styles = StyleSheet.create({
   },
   passengerTypeButtonTextSelected: {
     color: '#fff',
+  },
+  routeGrid: {
+    paddingBottom: 20,
+  },
+  routeGridItem: {
+    flex: 1,
+    margin: 5,
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  routeGridText: {
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  legendContainer: {
+  position: 'absolute',
+  top: 100, // you can dynamically adjust this if needed
+  left: 10,
+  right: 10,
+  maxHeight: SCREEN_HEIGHT * 0.3, // or adjust as needed
+  backgroundColor: '#fff',
+  padding: 10,
+  borderRadius: 10,
+  elevation: 8,
+  shadowColor: '#000',
+  shadowOpacity: 0.1,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 4,
+  zIndex: 999,
+},
+legendScrollContainer: {
+  maxHeight: 120,
+  marginBottom: 10,
+},
+legendItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: 6,
+},
+colorBox: {
+  width: 16,
+  height: 16,
+  marginRight: 8,
+  borderRadius: 4,
+  borderWidth: 1,
+  borderColor: '#ccc',
+},
+legendText: {
+  fontSize: 14,
+  color: '#333',
+},
+  section: {
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#0a662e',
+  },
+  routeButton: {
+    backgroundColor: '#fff',
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginVertical: 5, // Use vertical margin for spacing
+  },
+  routeButtonSelected: {
+    backgroundColor: '#0a662e',
+    borderColor: '#0a662e',
+  },
+  routeTextSelected: {
+    color: '#fff',
+  },
+  infoText: {
+    fontSize: 18,
+    color: '#333',
   },
 });
 

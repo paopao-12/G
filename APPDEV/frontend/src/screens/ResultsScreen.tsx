@@ -9,8 +9,8 @@ type PassengerType = 'regular' | 'senior' | 'student' | 'disabled';
 const PASSENGER_DISCOUNT: Record<PassengerType, number> = {
   regular: 0,
   senior: 0.2,
-  student: 0.15,
-  disabled: 0.5,
+  student: 0.2,
+  disabled: 0.2,
 };
 
 // Fare constants
@@ -101,12 +101,17 @@ export function ResultsScreen({ route, navigation }: any) {
                 style={styles.button}
                 onPress={() =>
                   navigation.navigate('RouteDetails', {
-                    route: item,
-                    userLocation,
-                    destLoc,
-                    passengerType,
-                    fare, 
-                    suggestions,
+                  route: {
+                   ...item, 
+                  polyline: item.polyline, // ensure this contains the correct GTFS route polyline
+                  route_color: item.route_color,
+                  route_short_name: item.route_short_name,
+                  shape_id: item.shape_id,
+                  },
+                  userLocation,
+                  destLoc,
+                  passengerType,
+                  fare,
                   })
                 }
               >
