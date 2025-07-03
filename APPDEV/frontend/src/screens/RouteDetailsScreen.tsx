@@ -1,176 +1,179 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView, Dimensions } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView, Dimensions, Alert } from 'react-native';
 import MapView, { Marker, Polyline } from 'react-native-maps';
-import { LatLng } from '../types/navigation';
+import * as Location from 'expo-location';
 
-type PassengerType = 'regular' | 'senior' | 'student' | 'disabled';
 
-interface RouteDetailsScreenProps {
-  route: any;
-  navigation: any;
-}
+const RouteDetailsScreen = ({ route, navigation }: { route: any, navigation: any }) => {
+const { route : selectedRoute, destLoc, passengerType, fare } = route?.params || {};
+const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
+  const [hasArrived, setHasArrived] = useState(false);
+const mapRef = useRef<MapView | null>(null);
 
-const RouteDetailsScreen: React.FC<RouteDetailsScreenProps> = ({ route, navigation }) => {
-  const { route: selectedRoute, userLocation, destLoc, passengerType, fare } = route.params;
+useEffect(() => {
+  let subscription: Location.LocationSubscription;
+(async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'Location permission is required.');
+        return;
+      }
+      subscription = await Location.watchPositionAsync(
+        { accuracy: Location.Accuracy.High, timeInterval: 2000, distanceInterval: 1 },
+        (location) => {
+          const newLocation = {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          };
+          setUserLocation(newLocation);
 
-  // Log the route parameters for debugging
-  console.log('Route Parameters:', route.params);
+          // Auto-center map as user moves
+          if (mapRef.current) {
+            mapRef.current.animateToRegion({
+              ...newLocation,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            }, 1000);
+          }
 
-  // Defensive checks for required data
-  if (!userLocation || !destLoc || !selectedRoute) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Required data (user location, destination, or route) is missing!</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>⬅ Back</Text>
-        </TouchableOpacity>
-      </View>
+          // Automatic arrival detection within 100 meters
+          const distance = getDistanceFromLatLonInMeters(
+            newLocation.latitude,
+            newLocation.longitude,
+            destLoc.lat,
+            destLoc.lon
+          );
+          if (distance <= 100 && !hasArrived) {
+            sendArrivalNotification();
+            setHasArrived(true);
+          }
+        }
+      );
+    })();
+    return () => {
+      if (subscription) subscription.remove();
+    };
+  }, [destLoc, hasArrived]);
+
+  const sendArrivalNotification = () => {
+    Alert.alert(
+      "You have arrived!",
+      "You are now near your drop-off location."
     );
-  }
-
-  // Access entry and exit points directly from selectedRoute
-  const entryPoint: LatLng = selectedRoute.entry; // Access entry point
-  const exitPoint: LatLng = selectedRoute.exit; // Access exit point
-
-  // Additional defensive checks for entry and exit points
-  if (!entryPoint || !exitPoint) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Entry or exit point data is missing!</Text>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>⬅ Back</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  };
 
   const handleStartNavigation = () => {
-    if (!userLocation || !entryPoint || !exitPoint || !destLoc) {
-      alert('Missing location data for navigation.');
+    if (!userLocation) {
+      Alert.alert('Waiting for location', 'Please wait while your location is being fetched.');
       return;
     }
-
-    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lon}&destination=${destLoc.lat},${destLoc.lon}&waypoints=${entryPoint.lat},${entryPoint.lon}|${exitPoint.lat},${exitPoint.lon}&travelmode=transit`;
-
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${destLoc.lat},${destLoc.lon}&travelmode=transit`;
     Linking.openURL(googleMapsUrl);
   };
 
+const getDistanceFromLatLonInMeters = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371000; // Earth's radius in meters
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+const deg2rad = (deg: number): number => {
+    return deg * (Math.PI / 180);
+  };
+
+  if (!userLocation ) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading your location...</Text>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>🚌 Route Details: {selectedRoute.route_short_name || selectedRoute.shape_id}</Text>
-
+      <Text style={styles.title}>
+  🚌 Route: {selectedRoute?.route_short_name ?? 'N/A'}
+</Text>
       <MapView
+        ref={mapRef}
         style={styles.map}
         initialRegion={{
-          latitude: userLocation.lat,
-          longitude: userLocation.lon,
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
         }}
       >
-        <Marker coordinate={{ latitude: userLocation.lat, longitude: userLocation.lon }} title="Your Location" pinColor="green" />
-        <Marker coordinate={{ latitude: entryPoint.lat, longitude: entryPoint.lon }} title="Entry Point" />
-        <Marker coordinate={{ latitude: exitPoint.lat, longitude: exitPoint.lon }} title="Exit Point" />
-        <Marker coordinate={{ latitude: destLoc.lat, longitude: destLoc.lon }} title="Destination" pinColor="red" />
+        {/* User Marker */}
+        <Marker coordinate={userLocation} title="Your Location" pinColor="green" />
 
+        {/* Destination Marker */}
+        <Marker
+          coordinate={{ latitude: destLoc.lat, longitude: destLoc.lon }}
+          title="Destination"
+          pinColor="red"
+        />
+
+        {/* Entry Marker */}
+        {selectedRoute.entry && (
+          <Marker
+            coordinate={{ latitude: selectedRoute.entry.lat, longitude: selectedRoute.entry.lon }}
+            title="Entry Point"
+            pinColor="blue"
+          />
+        )}
+
+        {/* Exit Marker */}
+        {selectedRoute.exit && (
+          <Marker
+            coordinate={{ latitude: selectedRoute.exit.lat, longitude: selectedRoute.exit.lon }}
+            title="Exit Point"
+            pinColor="orange"
+          />
+        )}
+
+        {/* Polyline for jeepney route */}
         {selectedRoute.polyline && (
           <Polyline
             coordinates={selectedRoute.polyline}
             strokeColor="#0a662e"
             strokeWidth={4}
-            lineCap="round"
-            lineJoin="round"
           />
         )}
       </MapView>
 
       <View style={styles.infoContainer}>
-        <Text style={styles.sectionTitle}>🚶 Walking Information</Text>
-        <Text style={styles.infoText}>Walk to Entry: {selectedRoute.entryDistance.toFixed(0)} m</Text>
-        <Text style={styles.infoText}>Walk from Exit: {selectedRoute.exitDistance.toFixed(0)} m</Text>
-
-        <Text style={styles.sectionTitle}>🚍 Jeepney Information</Text>
-        <Text style={styles.infoText}>Estimated Jeepney Distance: {selectedRoute.routeDistance?.toFixed(2) || 'N/A'} km</Text>
-
-        <Text style={styles.sectionTitle}>💰 Fare Information</Text>
-        <Text style={styles.infoText}>Passenger Type: {passengerType}</Text>
-        <Text style={styles.infoText}>Estimated Fare: ₱{fare}</Text>
+        <Text style={styles.sectionTitle}>Passenger Type: {passengerType}</Text>
+        <Text style={styles.sectionTitle}>Fare: ₱{fare}</Text>
       </View>
 
-      <TouchableOpacity style={styles.navigationButton} onPress={handleStartNavigation}>
-        <Text style={styles.navigationButtonText}>🧭 Start Navigation</Text>
+      <TouchableOpacity style={styles.button} onPress={handleStartNavigation}>
+        <Text style={styles.buttonText}>🧭 Start Navigation</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backButtonText}>⬅ Back</Text>
+        <Text style={styles.buttonText}>⬅ Back</Text>
       </TouchableOpacity>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginVertical: 12,
-    alignSelf: 'center',
-    color: '#0a662e',
-  },
-  map: {
-    width: Dimensions.get('window').width,
-    height: 300,
-  },
-  infoContainer: {
-    padding: 16,
-  },
-  sectionTitle: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#0a662e',
-    marginTop: 12,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#333',
-    marginTop: 4,
-  },
-  navigationButton: {
-    backgroundColor: '#0a662e',
-    padding: 14,
-    marginHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  navigationButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  backButton: {
-    backgroundColor: '#ccc',
-    padding: 14,
-    marginHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginVertical: 16,
-  },
-  backButtonText: {
-    color: '#333',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  errorText: {
-    textAlign: 'center',
-    color: '#ff0000',
-    marginTop: 20,
-    fontSize: 16,
-    paddingHorizontal: 16,
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  loadingText: { textAlign: 'center', marginTop: 20, fontSize: 16 },
+  title: { fontSize: 22, fontWeight: 'bold', alignSelf: 'center', marginVertical: 10, color: '#0a662e' },
+  map: { width: Dimensions.get('window').width, height: 300 },
+  infoContainer: { padding: 16 },
+  sectionTitle: { fontSize: 16, fontWeight: 'bold', color: '#0a662e', marginVertical: 4 },
+  button: { backgroundColor: '#0a662e', padding: 14, marginHorizontal: 16, marginTop: 10, borderRadius: 8, alignItems: 'center' },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  backButton: { backgroundColor: '#999', padding: 14, marginHorizontal: 16, marginVertical: 16, borderRadius: 8, alignItems: 'center' },
 });
 
 export default RouteDetailsScreen;

@@ -39,6 +39,9 @@ export type RootStackParamList = {
   fare: string;
 
   };
+
+  
   ResetPassword: { token?: string } | undefined;
   AdminUsers: undefined;
 };
+

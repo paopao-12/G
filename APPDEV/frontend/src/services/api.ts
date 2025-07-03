@@ -7,7 +7,7 @@ import * as Location from 'expo-location';
 
 
 const API_URL = Platform.select({
-    android: 'http://192.168.254.105:4000/api/transport', 
+    android: 'http://192.168.254.202:4000/api/transport', 
     ios: 'http://localhost:4000/api/transport', 
     default: 'http://localhost:4000/api/transport',
 });
